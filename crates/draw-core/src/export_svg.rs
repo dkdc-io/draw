@@ -1,6 +1,7 @@
 use crate::document::Document;
 use crate::element::{Element, ShapeElement};
 use crate::point::Bounds;
+use crate::render::{ARROWHEAD_ANGLE, ARROWHEAD_LENGTH};
 use crate::style::{FillStyle, FillType};
 
 // ── Hachure rendering constants ─────────────────────────────────────
@@ -88,8 +89,8 @@ fn render_element(element: &Element, clip_id: &mut usize) -> (String, String) {
                     &e.points[0]
                 };
                 let angle = (last.y - prev.y).atan2(last.x - prev.x);
-                let arrow_len = 12.0;
-                let arrow_angle = 0.4;
+                let arrow_len = ARROWHEAD_LENGTH as f64;
+                let arrow_angle = ARROWHEAD_ANGLE as f64;
                 let tip_x = last.x + e.x;
                 let tip_y = last.y + e.y;
                 let left_x = tip_x - arrow_len * (angle - arrow_angle).cos();

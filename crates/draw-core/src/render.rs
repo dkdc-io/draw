@@ -51,8 +51,8 @@ const HANDLE_FILL_B: u8 = 255;
 const CORNER_RADIUS: f32 = 12.0;
 
 /// Arrowhead geometry
-const ARROWHEAD_LENGTH: f32 = 14.0;
-const ARROWHEAD_ANGLE: f32 = 0.45;
+pub const ARROWHEAD_LENGTH: f32 = 14.0;
+pub const ARROWHEAD_ANGLE: f32 = 0.45;
 
 /// Hachure fill
 const HACHURE_LINE_WIDTH: f32 = 1.5;
@@ -84,6 +84,7 @@ const TEXT_MIN_CHARS: f32 = 2.0;
 // ── Public types ────────────────────────────────────────────────────────
 
 /// Configuration for the renderer.
+#[derive(Clone)]
 pub struct RenderConfig {
     pub width: u32,
     pub height: u32,
