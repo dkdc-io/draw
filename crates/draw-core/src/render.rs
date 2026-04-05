@@ -14,7 +14,7 @@ use tiny_skia::*;
 use crate::Document;
 use crate::element::{Element, FreeDrawElement, LineElement, ShapeElement, TextElement};
 use crate::point::{Bounds, ViewState};
-use crate::style::{FillStyle, FillType, StrokeStyle};
+use crate::style::{Arrowhead, FillStyle, FillType, StrokeStyle};
 
 // ── Theme constants (matches frontend/theme.js) ────────────────────────
 
@@ -394,7 +394,18 @@ impl Renderer {
             return;
         }
 
-        // Arrowhead
+        let color = parse_color(&el.stroke.color, opacity);
+        let mut paint = Paint::default();
+        paint.set_color(color);
+        paint.anti_alias = true;
+        let arrowhead_stroke = Stroke {
+            width: (el.stroke.width as f32) * 0.5,
+            line_cap: LineCap::Round,
+            line_join: LineJoin::Round,
+            ..Stroke::default()
+        };
+
+        // End arrowhead (tip at last point, pointing away from second-to-last)
         let last = el.points.last().unwrap();
         let prev = &el.points[el.points.len() - 2];
         let tip_x = last.x as f32 + el.x as f32;
@@ -412,21 +423,37 @@ impl Renderer {
         pb.line_to(right_x, right_y);
         pb.close();
         if let Some(path) = pb.finish() {
-            // Filled arrowhead
-            let color = parse_color(&el.stroke.color, opacity);
-            let mut paint = Paint::default();
-            paint.set_color(color);
-            paint.anti_alias = true;
             pixmap.fill_path(&path, &paint, FillRule::Winding, *transform, None);
+            pixmap.stroke_path(&path, &paint, &arrowhead_stroke, *transform, None);
+        }
 
-            // Thin stroke around arrowhead
-            let stroke = Stroke {
-                width: (el.stroke.width as f32) * 0.5,
-                line_cap: LineCap::Round,
-                line_join: LineJoin::Round,
-                ..Stroke::default()
-            };
-            pixmap.stroke_path(&path, &paint, &stroke, *transform, None);
+        // Start arrowhead (tip at first point, pointing away from second point)
+        if el.start_arrowhead != Arrowhead::None {
+            let first = &el.points[0];
+            let next = &el.points[1];
+            let start_tip_x = first.x as f32 + el.x as f32;
+            let start_tip_y = first.y as f32 + el.y as f32;
+            let start_angle =
+                (first.y as f32 - next.y as f32).atan2(first.x as f32 - next.x as f32);
+
+            let start_left_x =
+                start_tip_x - ARROWHEAD_LENGTH * (start_angle - ARROWHEAD_ANGLE).cos();
+            let start_left_y =
+                start_tip_y - ARROWHEAD_LENGTH * (start_angle - ARROWHEAD_ANGLE).sin();
+            let start_right_x =
+                start_tip_x - ARROWHEAD_LENGTH * (start_angle + ARROWHEAD_ANGLE).cos();
+            let start_right_y =
+                start_tip_y - ARROWHEAD_LENGTH * (start_angle + ARROWHEAD_ANGLE).sin();
+
+            let mut pb = PathBuilder::new();
+            pb.move_to(start_tip_x, start_tip_y);
+            pb.line_to(start_left_x, start_left_y);
+            pb.line_to(start_right_x, start_right_y);
+            pb.close();
+            if let Some(path) = pb.finish() {
+                pixmap.fill_path(&path, &paint, FillRule::Winding, *transform, None);
+                pixmap.stroke_path(&path, &paint, &arrowhead_stroke, *transform, None);
+            }
         }
     }
 

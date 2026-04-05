@@ -2,7 +2,7 @@ use crate::document::Document;
 use crate::element::{Element, ShapeElement};
 use crate::point::Bounds;
 use crate::render::{ARROWHEAD_ANGLE, ARROWHEAD_LENGTH};
-use crate::style::{FillStyle, FillType};
+use crate::style::{Arrowhead, FillStyle, FillType};
 
 // ── Hachure rendering constants ─────────────────────────────────────
 const HACHURE_LINE_WIDTH: f64 = 1.5;
@@ -82,6 +82,11 @@ fn render_element(element: &Element, clip_id: &mut usize) -> (String, String) {
             }
             let stroke = stroke_attrs(&e.stroke.color, e.stroke.width, &e.stroke.dash);
             let marker = if matches!(element, Element::Arrow(_)) {
+                let arrow_len = ARROWHEAD_LENGTH as f64;
+                let arrow_angle = ARROWHEAD_ANGLE as f64;
+                let mut markers = String::new();
+
+                // End arrowhead (tip at last point, pointing away from second-to-last)
                 let last = e.points.last().unwrap();
                 let prev = if e.points.len() >= 2 {
                     &e.points[e.points.len() - 2]
@@ -89,18 +94,35 @@ fn render_element(element: &Element, clip_id: &mut usize) -> (String, String) {
                     &e.points[0]
                 };
                 let angle = (last.y - prev.y).atan2(last.x - prev.x);
-                let arrow_len = ARROWHEAD_LENGTH as f64;
-                let arrow_angle = ARROWHEAD_ANGLE as f64;
                 let tip_x = last.x + e.x;
                 let tip_y = last.y + e.y;
                 let left_x = tip_x - arrow_len * (angle - arrow_angle).cos();
                 let left_y = tip_y - arrow_len * (angle - arrow_angle).sin();
                 let right_x = tip_x - arrow_len * (angle + arrow_angle).cos();
                 let right_y = tip_y - arrow_len * (angle + arrow_angle).sin();
-                format!(
+                markers.push_str(&format!(
                     r#"  <polygon points="{tip_x},{tip_y} {left_x},{left_y} {right_x},{right_y}" fill="{}" stroke="none"/>"#,
                     e.stroke.color
-                )
+                ));
+
+                // Start arrowhead (tip at first point, pointing away from second point)
+                if e.start_arrowhead != Arrowhead::None {
+                    let first = &e.points[0];
+                    let next = &e.points[1];
+                    let start_angle = (first.y - next.y).atan2(first.x - next.x);
+                    let start_tip_x = first.x + e.x;
+                    let start_tip_y = first.y + e.y;
+                    let start_left_x = start_tip_x - arrow_len * (start_angle - arrow_angle).cos();
+                    let start_left_y = start_tip_y - arrow_len * (start_angle - arrow_angle).sin();
+                    let start_right_x = start_tip_x - arrow_len * (start_angle + arrow_angle).cos();
+                    let start_right_y = start_tip_y - arrow_len * (start_angle + arrow_angle).sin();
+                    markers.push_str(&format!(
+                        r#"  <polygon points="{start_tip_x},{start_tip_y} {start_left_x},{start_left_y} {start_right_x},{start_right_y}" fill="{}" stroke="none"/>"#,
+                        e.stroke.color
+                    ));
+                }
+
+                markers
             } else {
                 String::new()
             };
