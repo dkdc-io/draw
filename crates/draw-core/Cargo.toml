@@ -1,0 +1,25 @@
+[package]
+name = "dkdc-draw-core"
+version = "0.1.0"
+edition = "2024"
+authors = ["Cody <cody@dkdc.io>"]
+description = "Core library for draw"
+repository = "https://github.com/dkdc-io/draw"
+license = "MIT"
+
+[lib]
+name = "draw_core"
+path = "src/lib.rs"
+
+[dependencies]
+anyhow = "1"
+chrono = { version = "0.4", features = ["serde"] }
+dirs = "6"
+resvg = "0.47"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tiny-skia = "0.12"
+uuid = { version = "1", features = ["v4"] }
+
+[dev-dependencies]
+tempfile = "3"
