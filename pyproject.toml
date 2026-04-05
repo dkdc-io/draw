@@ -1,0 +1,52 @@
+[project]
+name = "dkdc-draw"
+version = "0.1.0"
+description = "Local-first drawing tool"
+authors = [{ name = "Cody", email = "cody@dkdc.io" }]
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+readme = "README.md"
+keywords = ["graphics", "drawing", "canvas", "sketch"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Rust",
+    "Topic :: Multimedia :: Graphics",
+]
+dependencies = []
+
+[project.urls]
+Repository = "https://github.com/dkdc-io/draw"
+Homepage = "https://github.com/dkdc-io/draw"
+
+[project.scripts]
+draw = "dkdc_draw:main"
+
+[dependency-groups]
+dev = ["maturin>=1.0,<2.0", "ruff>=0.9", "ty>=0.0.19", "pytest>=8"]
+
+[tool.maturin]
+module-name = "dkdc_draw.core"
+python-packages = ["dkdc_draw"]
+python-source = "py"
+manifest-path = "crates/draw-py/Cargo.toml"
+
+[build-system]
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"
+
+[tool.uv]
+cache-keys = [
+    { file = "pyproject.toml" },
+    { file = "crates/draw-core/**/*.rs" },
+    { file = "crates/draw-cli/**/*.rs" },
+    { file = "crates/draw-webapp/**/*.rs" },
+    { file = "crates/draw-app/**/*.rs" },
+    { file = "crates/draw-py/**/*.rs" },
+    { file = "py/dkdc_draw/**/*.py" },
+]

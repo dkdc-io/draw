@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>dkdc draw</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+  <!-- OPEN_SCRIPT -->
+  <script type="module">
+    import init, { DrawEngine } from '/wasm_glue.js';
+    window._wasmInit = init().then(() => {
+      window.DrawEngine = DrawEngine;
+    });
+  </script>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+
+  <div id="toolbar-wrapper">
+    <div id="toolbar">
+      <!-- Tools -->
+      <div class="tool-group">
+        <button class="tool-btn active" data-tool="select" title="Select (V)" aria-label="Select tool">
+          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/>
+          </svg>
+        </button>
+        <button class="tool-btn" data-tool="rectangle" title="Rectangle (R)" aria-label="Rectangle tool">
+          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+          </svg>
+        </button>
+        <button class="tool-btn" data-tool="ellipse" title="Ellipse (O)" aria-label="Ellipse tool">
+          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <ellipse cx="12" cy="12" rx="10" ry="8"/>
+          </svg>
+        </button>
+        <button class="tool-btn" data-tool="diamond" title="Diamond (D)" aria-label="Diamond tool">
+          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2l10 10-10 10L2 12z"/>
+          </svg>
+        </button>
+        <button class="tool-btn" data-tool="line" title="Line (L)" aria-label="Line tool">
+          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="5" y1="19" x2="19" y2="5"/>
+          </svg>
+        </button>
+        <button class="tool-btn" data-tool="arrow" title="Arrow (A)" aria-label="Arrow tool">
+          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="5" y1="19" x2="19" y2="5"/>
+            <polyline points="10 5 19 5 19 14"/>
+          </svg>
+        </button>
+        <button class="tool-btn" data-tool="freedraw" title="Pen (P)" aria-label="Pen tool">
+          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 19l7-7 3 3-7 7-3-3z"/>
+            <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
+          </svg>
+        </button>
+        <button class="tool-btn" data-tool="text" title="Text (T)" aria-label="Text tool">
+          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="4 7 4 4 20 4 20 7"/>
+            <line x1="12" y1="4" x2="12" y2="20"/>
+            <line x1="8" y1="20" x2="16" y2="20"/>
+          </svg>
+        </button>
+        <button class="tool-btn" data-tool="eraser" title="Eraser (E)" aria-label="Eraser tool">
+          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 20H7L3 16l9-9 8 8-4 4"/>
+            <line x1="6" y1="11" x2="13" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="separator"></div>
+
+      <!-- Style Controls -->
+      <div class="style-group" id="style-controls">
+        <input type="checkbox" id="no-fill">
+        <div class="control-row">
+          <span class="control-label">Stroke</span>
+          <div class="color-picker-wrap">
+            <button class="color-swatch" id="stroke-swatch" aria-label="Stroke color"></button>
+            <input type="color" id="stroke-color" value="#e2e8f0" class="color-hidden">
+          </div>
+          <select id="stroke-width">
+            <option value="1">Thin</option>
+            <option value="2" selected>Normal</option>
+            <option value="4">Bold</option>
+            <option value="8">Extra Bold</option>
+          </select>
+          <select id="stroke-dash">
+            <option value="" selected>Solid</option>
+            <option value="8,4">Dashed</option>
+            <option value="2,4">Dotted</option>
+          </select>
+        </div>
+        <div class="control-row">
+          <span class="control-label">Fill</span>
+          <div class="color-picker-wrap">
+            <button class="color-swatch" id="fill-swatch" aria-label="Fill color"></button>
+            <input type="color" id="fill-color" value="#3b82f6" class="color-hidden">
+          </div>
+          <button class="no-fill-btn" id="no-fill-btn" title="Toggle fill" aria-label="Toggle fill">
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="2" y="2" width="12" height="12" rx="2"/>
+              <line x1="3" y1="13" x2="13" y2="3"/>
+            </svg>
+          </button>
+          <select id="fill-style">
+            <option value="hachure" selected>Hachure</option>
+            <option value="crosshatch">Cross-hatch</option>
+            <option value="solid">Solid</option>
+            <option value="none">None</option>
+          </select>
+          <select id="fill-density">
+            <option value="16">Sparse</option>
+            <option value="10" selected>Normal</option>
+            <option value="6">Dense</option>
+            <option value="3">Very dense</option>
+          </select>
+        </div>
+        <div class="control-row">
+          <span class="control-label">Text</span>
+          <select id="font-size">
+            <option value="16">Small</option>
+            <option value="20" selected>Medium</option>
+            <option value="28">Large</option>
+            <option value="40">XL</option>
+          </select>
+          <input type="range" id="opacity" min="0.1" max="1" step="0.1" value="1">
+          <span id="opacity-value" class="control-value">100%</span>
+        </div>
+      </div>
+
+      <div class="separator"></div>
+
+      <!-- Undo / Redo -->
+      <div class="action-group">
+        <button class="action-btn icon-only" id="btn-undo" title="Undo (Ctrl+Z)" aria-label="Undo">
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="1 4 1 10 7 10"/>
+            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+          </svg>
+        </button>
+        <button class="action-btn icon-only" id="btn-redo" title="Redo (Ctrl+Shift+Z)" aria-label="Redo">
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"/>
+            <path d="M20.49 15a9 9 0 1 1-2.13-9.36L23 10"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="separator"></div>
+
+      <!-- Zoom -->
+      <button class="action-btn" id="zoom-btn" title="Reset zoom (click)">100%</button>
+
+      <div class="separator"></div>
+
+      <!-- Save / Export -->
+      <div class="action-group">
+        <button class="action-btn" id="btn-save" title="Save (Ctrl+S)" aria-label="Save drawing">
+          <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+            <polyline points="17 21 17 13 7 13 7 21"/>
+            <polyline points="7 3 7 8 15 8"/>
+          </svg>
+          Save
+        </button>
+        <button class="action-btn" id="btn-export" title="Export SVG" aria-label="Export as SVG">
+          <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          SVG
+        </button>
+        <button class="action-btn" id="btn-export-png" title="Export PNG" aria-label="Export as PNG">
+          <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          PNG
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="status-bar">
+    <span id="status-name" title="Click to rename">untitled</span>
+    <span class="status-sep">/</span>
+    <span id="status-tool">Select</span>
+    <span id="status-saved"></span>
+  </div>
+
+  <script src="/theme.js"></script>
+  <script src="/api.js"></script>
+  <script src="/canvas.js"></script>
+  <script src="/interactions.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>
