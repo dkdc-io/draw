@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
+
+wasm-pack build crates/draw-wasm --target web --out-dir ../../target/wasm-pkg
+
+# Copy output to webapp frontend for embedding
+cp target/wasm-pkg/draw_wasm.js crates/draw-webapp/frontend/wasm_glue.js
+cp target/wasm-pkg/draw_wasm_bg.wasm crates/draw-webapp/frontend/draw_wasm_bg.wasm
+
+echo "WASM build complete"
