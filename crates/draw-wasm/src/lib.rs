@@ -114,6 +114,44 @@ impl DrawEngine {
         (self.renderer.config().height as f32 * self.pixel_ratio) as u32
     }
 
+    /// Get text overlay data for browser-native text rendering.
+    /// Returns JSON array of text elements with screen-space positions:
+    /// `[{"x":..,"y":..,"text":"..","fontSize":..,"fontFamily":"..","align":"..","color":"..","opacity":..,"width":..,"height":..}]`
+    pub fn get_text_overlays(&self) -> String {
+        let zoom = self.viewport.zoom;
+        let sx = self.viewport.scroll_x;
+        let sy = self.viewport.scroll_y;
+        let pr = self.pixel_ratio as f64;
+
+        let mut overlays = Vec::new();
+        for el in &self.document.elements {
+            if let Element::Text(t) = el {
+                let screen_x = (t.x * zoom + sx) * pr;
+                let screen_y = (t.y * zoom + sy) * pr;
+                let font_size = t.font.size * zoom * pr;
+                let align = match t.font.align {
+                    draw_core::style::TextAlign::Left => "left",
+                    draw_core::style::TextAlign::Center => "center",
+                    draw_core::style::TextAlign::Right => "right",
+                };
+                // Approximate text bounds for width/height
+                let lines: Vec<&str> = t.text.split('\n').collect();
+                let max_chars = lines.iter().map(|l| l.chars().count()).max().unwrap_or(0);
+                let width = (max_chars as f64 * t.font.size * 0.6) * zoom * pr;
+                let height = (lines.len() as f64 * t.font.size * 1.2) * zoom * pr;
+
+                overlays.push(format!(
+                    r#"{{"x":{},"y":{},"text":"{}","fontSize":{},"fontFamily":"{}","align":"{}","color":"{}","opacity":{},"width":{},"height":{}}}"#,
+                    screen_x, screen_y,
+                    t.text.replace('\\', "\\\\").replace('"', "\\\"").replace('\n', "\\n"),
+                    font_size, t.font.family, align, t.stroke.color, t.opacity,
+                    width, height
+                ));
+            }
+        }
+        format!("[{}]", overlays.join(","))
+    }
+
     // ── Hit testing ─────────────────────────────────────────────────
 
     /// Hit test at screen coordinates. Returns element ID or empty string.
@@ -377,7 +415,7 @@ impl DrawEngine {
     /// Undo the last action. Returns true if something was undone.
     pub fn undo(&mut self) -> bool {
         if let Some(action) = self.history.pop_undo() {
-            self.apply_undo(&action);
+            self.apply_undo(action);
             true
         } else {
             false
@@ -387,7 +425,7 @@ impl DrawEngine {
     /// Redo the last undone action. Returns true if something was redone.
     pub fn redo(&mut self) -> bool {
         if let Some(action) = self.history.pop_redo() {
-            self.apply_redo(&action);
+            self.apply_redo(action);
             true
         } else {
             false
@@ -413,6 +451,143 @@ impl DrawEngine {
         self.history.can_redo()
     }
 
+    // ── Selection helpers ───────────────────────────────────────────
+
+    /// Select all elements (skipping bound text — they follow parent shapes).
+    pub fn select_all(&mut self) {
+        self.selected_ids = self
+            .document
+            .elements
+            .iter()
+            .filter(|el| el.group_id().is_none())
+            .map(|el| el.id().to_string())
+            .collect();
+    }
+
+    /// Clear the selection.
+    pub fn clear_selection(&mut self) {
+        self.selected_ids.clear();
+    }
+
+    /// Add an element to the selection.
+    pub fn add_to_selection(&mut self, id: &str) {
+        if !self.selected_ids.iter().any(|s| s == id) {
+            self.selected_ids.push(id.to_string());
+        }
+    }
+
+    /// Remove an element from the selection.
+    pub fn remove_from_selection(&mut self, id: &str) {
+        self.selected_ids.retain(|s| s != id);
+    }
+
+    /// Check if an element is selected.
+    pub fn is_selected(&self, id: &str) -> bool {
+        self.selected_ids.iter().any(|s| s == id)
+    }
+
+    // ── Bulk operations ────────────────────────────────────────────
+
+    /// Remove multiple elements by ID (JSON array). Pushes a batch undo action.
+    pub fn remove_elements(&mut self, ids_json: &str) {
+        if let Ok(ids) = serde_json::from_str::<Vec<String>>(ids_json) {
+            for id in &ids {
+                if let Some(el) = self.document.remove_element(id) {
+                    self.history
+                        .push(Action::RemoveElement(id.to_string(), Box::new(el)));
+                    self.selected_ids.retain(|s| s != id);
+                }
+            }
+        }
+    }
+
+    /// Get all element IDs as a JSON array.
+    pub fn get_all_element_ids(&self) -> String {
+        let ids: Vec<&str> = self.document.elements.iter().map(|el| el.id()).collect();
+        serde_json::to_string(&ids).unwrap_or_else(|_| "[]".to_string())
+    }
+
+    /// Get elements with a specific group_id (for bound text). Returns JSON array of IDs.
+    pub fn get_elements_by_group(&self, group_id: &str) -> String {
+        let ids: Vec<&str> = self
+            .document
+            .elements
+            .iter()
+            .filter(|el| el.group_id() == Some(group_id))
+            .map(|el| el.id())
+            .collect();
+        serde_json::to_string(&ids).unwrap_or_else(|_| "[]".to_string())
+    }
+
+    // ── Z-ordering ─────────────────────────────────────────────────
+
+    /// Move an element to the front (top of draw order).
+    pub fn reorder_to_front(&mut self, id: &str) {
+        if let Some(idx) = self.document.elements.iter().position(|e| e.id() == id) {
+            let el = self.document.elements.remove(idx);
+            self.document.elements.push(el);
+        }
+    }
+
+    /// Move an element to the back (bottom of draw order).
+    pub fn reorder_to_back(&mut self, id: &str) {
+        if let Some(idx) = self.document.elements.iter().position(|e| e.id() == id) {
+            let el = self.document.elements.remove(idx);
+            self.document.elements.insert(0, el);
+        }
+    }
+
+    /// Move an element one position forward in draw order.
+    pub fn reorder_forward(&mut self, id: &str) {
+        if let Some(idx) = self.document.elements.iter().position(|e| e.id() == id)
+            && idx < self.document.elements.len() - 1
+        {
+            self.document.elements.swap(idx, idx + 1);
+        }
+    }
+
+    /// Move an element one position backward in draw order.
+    pub fn reorder_backward(&mut self, id: &str) {
+        if let Some(idx) = self.document.elements.iter().position(|e| e.id() == id)
+            && idx > 0
+        {
+            self.document.elements.swap(idx, idx - 1);
+        }
+    }
+
+    // ── Grid toggle ────────────────────────────────────────────────
+
+    /// Show or hide the grid.
+    pub fn set_show_grid(&mut self, show: bool) {
+        let mut config = self.renderer.config().clone();
+        config.show_grid = show;
+        self.renderer = Renderer::new(config);
+    }
+
+    // ── Document serialization (extended) ──────────────────────────
+
+    /// Get the full document JSON with updated modified_at for saving.
+    pub fn get_document_json_for_save(&self) -> String {
+        // Clone and update modified_at
+        let mut doc = self.document.clone();
+        doc.modified_at = chrono::Utc::now().to_rfc3339();
+        serde_json::to_string(&doc).unwrap_or_default()
+    }
+
+    // ── Document metadata ──────────────────────────────────────────
+
+    pub fn set_document_id(&mut self, id: &str) {
+        self.document.id = id.to_string();
+    }
+
+    pub fn document_id(&self) -> String {
+        self.document.id.clone()
+    }
+
+    pub fn set_created_at(&mut self, ts: &str) {
+        self.document.created_at = ts.to_string();
+    }
+
     // ── Document info ───────────────────────────────────────────────
 
     pub fn document_name(&self) -> String {
@@ -431,16 +606,16 @@ impl DrawEngine {
 // ── Private helpers (not exposed to JS) ─────────────────────────────────
 
 impl DrawEngine {
-    fn apply_undo(&mut self, action: &Action) {
+    fn apply_undo(&mut self, action: Action) {
         match action {
             Action::AddElement(el) => {
                 self.document.remove_element(el.id());
             }
             Action::RemoveElement(_, el) => {
-                self.document.add_element(*el.clone());
+                self.document.add_element(*el);
             }
             Action::MoveElement { id, dx, dy } => {
-                if let Some(el) = self.document.get_element_mut(id) {
+                if let Some(el) = self.document.get_element_mut(&id) {
                     match el {
                         Element::Rectangle(e) | Element::Ellipse(e) | Element::Diamond(e) => {
                             e.x -= dx;
@@ -469,41 +644,38 @@ impl DrawEngine {
                 old_height,
                 ..
             } => {
-                if let Some(el) = self.document.get_element_mut(id) {
-                    match el {
-                        Element::Rectangle(e) | Element::Ellipse(e) | Element::Diamond(e) => {
-                            e.x = *old_x;
-                            e.y = *old_y;
-                            e.width = *old_width;
-                            e.height = *old_height;
-                        }
-                        _ => {}
-                    }
+                if let Some(Element::Rectangle(e) | Element::Ellipse(e) | Element::Diamond(e)) =
+                    self.document.get_element_mut(&id)
+                {
+                    e.x = old_x;
+                    e.y = old_y;
+                    e.width = old_width;
+                    e.height = old_height;
                 }
             }
             Action::UpdateElement { id, before, .. } => {
-                if let Some(el) = self.document.get_element_mut(id) {
-                    *el = *before.clone();
+                if let Some(el) = self.document.get_element_mut(&id) {
+                    *el = *before;
                 }
             }
             Action::Batch(actions) => {
-                for a in actions.iter().rev() {
+                for a in actions.into_iter().rev() {
                     self.apply_undo(a);
                 }
             }
         }
     }
 
-    fn apply_redo(&mut self, action: &Action) {
+    fn apply_redo(&mut self, action: Action) {
         match action {
             Action::AddElement(el) => {
-                self.document.add_element(*el.clone());
+                self.document.add_element(*el);
             }
             Action::RemoveElement(id, _) => {
-                self.document.remove_element(id);
+                self.document.remove_element(&id);
             }
             Action::MoveElement { id, dx, dy } => {
-                if let Some(el) = self.document.get_element_mut(id) {
+                if let Some(el) = self.document.get_element_mut(&id) {
                     match el {
                         Element::Rectangle(e) | Element::Ellipse(e) | Element::Diamond(e) => {
                             e.x += dx;
@@ -532,21 +704,18 @@ impl DrawEngine {
                 new_height,
                 ..
             } => {
-                if let Some(el) = self.document.get_element_mut(id) {
-                    match el {
-                        Element::Rectangle(e) | Element::Ellipse(e) | Element::Diamond(e) => {
-                            e.x = *new_x;
-                            e.y = *new_y;
-                            e.width = *new_width;
-                            e.height = *new_height;
-                        }
-                        _ => {}
-                    }
+                if let Some(Element::Rectangle(e) | Element::Ellipse(e) | Element::Diamond(e)) =
+                    self.document.get_element_mut(&id)
+                {
+                    e.x = new_x;
+                    e.y = new_y;
+                    e.width = new_width;
+                    e.height = new_height;
                 }
             }
             Action::UpdateElement { id, after, .. } => {
-                if let Some(el) = self.document.get_element_mut(id) {
-                    *el = *after.clone();
+                if let Some(el) = self.document.get_element_mut(&id) {
+                    *el = *after;
                 }
             }
             Action::Batch(actions) => {
