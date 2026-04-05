@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
+
+echo "Publishing dkdc-draw-core to crates.io..."
+cargo publish -p dkdc-draw-core
+
+echo "Publishing dkdc-draw-app to crates.io..."
+cargo publish -p dkdc-draw-app
+
+echo "Publishing dkdc-draw-webapp to crates.io..."
+cargo publish -p dkdc-draw-webapp
+
+echo "Publishing dkdc-draw to crates.io..."
+cargo publish -p dkdc-draw
+
+echo "Published!"
