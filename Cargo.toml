@@ -1,0 +1,15 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/draw-core",
+    "crates/draw-app",
+    "crates/draw-webapp",
+    "crates/draw-cli",
+    "crates/draw-wasm",
+]
+exclude = ["crates/draw-py"]
+
+[profile.release]
+lto = true
+strip = true
+codegen-units = 1
