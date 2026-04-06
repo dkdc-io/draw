@@ -13,7 +13,7 @@ path = "src/lib.rs"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-draw_core = { path = "../draw-core", package = "dkdc-draw-core" }
+draw_core = { version = "0.1.0", path = "../draw-core", package = "dkdc-draw-core" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 uuid = { version = "1", features = ["v4"] }
