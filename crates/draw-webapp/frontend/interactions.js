@@ -305,13 +305,11 @@ class Interactions {
       }
       // The element is already in the engine from the preview adds.
       // Remove and re-add with final state to get a clean undo entry.
+      // KNOWN ISSUE: intermediate preview states remain in undo history,
+      // so Ctrl+Z shows the shape being redrawn incrementally instead of
+      // a single undo step. Fix requires either batching preview adds into
+      // a single Action::Batch, or storing previews outside the history.
       this.engine.remove_element(el.id);
-      // Clear the intermediate undo entries
-      while (this.engine.can_undo()) {
-        // We need to undo the remove + intermediate adds
-        // Actually, we just re-add the final element cleanly
-        break;
-      }
       this.engine.add_element(JSON.stringify(el));
       this.engine.clear_selection();
       this.engine.add_to_selection(el.id);
