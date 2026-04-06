@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use crate::element::Element;
 use crate::point::ViewState;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Document {
     pub id: String,
     pub version: u32,
@@ -99,6 +99,54 @@ mod tests {
         // modified_at should not change when element not found
         assert_eq!(doc.modified_at, modified_after_remove);
         let _ = modified_before;
+    }
+
+    #[test]
+    fn test_json_roundtrip() {
+        use crate::element::{FreeDrawElement, LineElement, TextElement};
+        use crate::point::Point;
+
+        let mut doc = Document::new("roundtrip test".to_string());
+        doc.add_element(Element::Rectangle(ShapeElement::new(
+            "r1".to_string(),
+            10.0,
+            20.0,
+            100.0,
+            50.0,
+        )));
+        doc.add_element(Element::Ellipse(ShapeElement::new(
+            "e1".to_string(),
+            0.0,
+            0.0,
+            80.0,
+            60.0,
+        )));
+        doc.add_element(Element::Line(LineElement::new(
+            "l1".to_string(),
+            5.0,
+            5.0,
+            vec![Point::new(0.0, 0.0), Point::new(50.0, 50.0)],
+        )));
+        doc.add_element(Element::FreeDraw(FreeDrawElement::new(
+            "fd1".to_string(),
+            1.0,
+            2.0,
+            vec![
+                Point::new(0.0, 0.0),
+                Point::new(3.0, 4.0),
+                Point::new(6.0, 1.0),
+            ],
+        )));
+        doc.add_element(Element::Text(TextElement::new(
+            "t1".to_string(),
+            0.0,
+            0.0,
+            "hello\nworld".to_string(),
+        )));
+
+        let json = serde_json::to_string_pretty(&doc).unwrap();
+        let deserialized: Document = serde_json::from_str(&json).unwrap();
+        assert_eq!(doc, deserialized);
     }
 
     #[test]

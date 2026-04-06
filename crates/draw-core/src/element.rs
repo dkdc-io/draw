@@ -278,6 +278,52 @@ mod tests {
     }
 
     #[test]
+    fn test_element_bounds_ellipse() {
+        let ellipse = Element::Ellipse(ShapeElement::new("e1".to_string(), 5.0, 10.0, 80.0, 60.0));
+        let b = ellipse.bounds();
+        assert_eq!(b.x, 5.0);
+        assert_eq!(b.y, 10.0);
+        assert_eq!(b.width, 80.0);
+        assert_eq!(b.height, 60.0);
+    }
+
+    #[test]
+    fn test_element_bounds_line() {
+        let line = Element::Line(LineElement::new(
+            "l1".to_string(),
+            10.0,
+            20.0,
+            vec![Point::new(0.0, 0.0), Point::new(50.0, 30.0)],
+        ));
+        let b = line.bounds();
+        // Absolute points: (10,20) and (60,50)
+        assert_eq!(b.x, 10.0);
+        assert_eq!(b.y, 20.0);
+        assert_eq!(b.width, 50.0);
+        assert_eq!(b.height, 30.0);
+    }
+
+    #[test]
+    fn test_element_bounds_freedraw() {
+        let fd = Element::FreeDraw(FreeDrawElement::new(
+            "fd1".to_string(),
+            5.0,
+            5.0,
+            vec![
+                Point::new(0.0, 0.0),
+                Point::new(10.0, 20.0),
+                Point::new(-5.0, 10.0),
+            ],
+        ));
+        let b = fd.bounds();
+        // Absolute points: (5,5), (15,25), (0,15)
+        assert_eq!(b.x, 0.0);
+        assert_eq!(b.y, 5.0);
+        assert_eq!(b.width, 15.0);
+        assert_eq!(b.height, 20.0);
+    }
+
+    #[test]
     fn test_element_bounds_text_multiline() {
         let text = Element::Text(TextElement::new(
             "t1".to_string(),

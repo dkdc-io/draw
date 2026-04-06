@@ -515,6 +515,93 @@ mod tests {
         assert!(svg.contains("<polygon"));
     }
 
+    #[test]
+    fn test_multi_element_svg() {
+        use crate::element::{FreeDrawElement, LineElement, TextElement};
+        use crate::point::Point;
+
+        let mut doc = Document::new("multi".to_string());
+        doc.add_element(Element::Rectangle(ShapeElement::new(
+            "r1".to_string(),
+            0.0,
+            0.0,
+            100.0,
+            50.0,
+        )));
+        doc.add_element(Element::Ellipse(ShapeElement::new(
+            "e1".to_string(),
+            120.0,
+            0.0,
+            80.0,
+            60.0,
+        )));
+        doc.add_element(Element::Line(LineElement::new(
+            "l1".to_string(),
+            0.0,
+            70.0,
+            vec![Point::new(0.0, 0.0), Point::new(50.0, 50.0)],
+        )));
+        doc.add_element(Element::FreeDraw(FreeDrawElement::new(
+            "fd1".to_string(),
+            60.0,
+            70.0,
+            vec![
+                Point::new(0.0, 0.0),
+                Point::new(5.0, 10.0),
+                Point::new(10.0, 0.0),
+            ],
+        )));
+        doc.add_element(Element::Text(TextElement::new(
+            "t1".to_string(),
+            0.0,
+            150.0,
+            "hello".to_string(),
+        )));
+
+        let svg = export_svg(&doc);
+
+        // Valid SVG structure
+        assert!(svg.starts_with("<svg"));
+        assert!(svg.ends_with("</svg>"));
+
+        // All element types present
+        assert!(svg.contains("<rect"));
+        assert!(svg.contains("<ellipse"));
+        assert!(svg.contains("<text"));
+        // Line and freedraw both produce <path>
+        assert!(svg.matches("<path").count() >= 2);
+
+        // viewBox is set (non-empty doc)
+        assert!(svg.contains("viewBox="));
+    }
+
+    #[test]
+    fn test_arrow_start_and_end_arrowheads() {
+        use crate::element::LineElement;
+        use crate::point::Point;
+        use crate::style::Arrowhead;
+
+        let mut doc = Document::new("arrows".to_string());
+        let mut arrow = LineElement::new(
+            "a1".to_string(),
+            0.0,
+            0.0,
+            vec![Point::new(0.0, 0.0), Point::new(100.0, 0.0)],
+        );
+        arrow.start_arrowhead = Some(Arrowhead::Arrow);
+        arrow.end_arrowhead = Some(Arrowhead::Arrow);
+        doc.add_element(Element::Arrow(arrow));
+
+        let svg = export_svg(&doc);
+
+        // Should have two polygon elements (one for each arrowhead)
+        let polygon_count = svg.matches("<polygon").count();
+        assert_eq!(
+            polygon_count, 2,
+            "Expected 2 arrowhead polygons (start + end), got {polygon_count}"
+        );
+    }
+
     // ── Hachure fill tests ──────────────────────────────────────────
 
     #[test]
