@@ -2,6 +2,7 @@
 name = "dkdc-draw-webapp"
 version = "0.1.0"
 edition = "2024"
+publish = false
 authors = ["Cody <cody@dkdc.io>"]
 description = "Webapp for draw (axum)"
 repository = "https://github.com/dkdc-io/draw"
