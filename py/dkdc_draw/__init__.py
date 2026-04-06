@@ -1,6 +1,12 @@
 import sys
 
-from dkdc_draw.core import export_svg, load_document, new_document, run_cli, save_document
+from dkdc_draw.core import (
+    export_svg,
+    load_document,
+    new_document,
+    run_cli,
+    save_document,
+)
 
 __all__ = [
     "run",
