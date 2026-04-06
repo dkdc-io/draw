@@ -14,7 +14,7 @@ use tiny_skia::*;
 use crate::Document;
 use crate::element::{Element, FreeDrawElement, LineElement, ShapeElement, TextElement};
 use crate::point::{Bounds, ViewState};
-use crate::style::{Arrowhead, FillStyle, FillType, StrokeStyle};
+use crate::style::{FillStyle, FillType, StrokeStyle};
 
 // ── Theme constants (matches frontend/theme.js) ────────────────────────
 
