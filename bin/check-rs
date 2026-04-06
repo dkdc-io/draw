@@ -2,17 +2,18 @@
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
-# draw-app (wry/webview) requires GTK/glib system libraries on Linux
-# and cannot build in CI without them — exclude it from workspace checks
-EXCLUDE="--exclude dkdc-draw-app"
+# draw-app requires GTK/glib (Linux system dep)
+# draw-webapp embeds WASM build artifacts (requires bin/build-wasm first)
+# Both are excluded from CI checks — only core + wasm + cli are checked
+EXCLUDE="--exclude dkdc-draw-app --exclude dkdc-draw-webapp"
 
 echo "Checking Rust formatting..."
 cargo fmt -- --check
 
 echo "Running clippy..."
-cargo clippy --workspace $EXCLUDE --features webapp -- -D warnings
+cargo clippy --workspace $EXCLUDE -- -D warnings
 
 echo "Running Rust tests..."
-cargo test --workspace $EXCLUDE --features webapp
+cargo test --workspace $EXCLUDE
 
 echo "Rust checks passed!"
