@@ -2,7 +2,6 @@
 name = "dkdc-draw-app"
 version = "0.1.0"
 edition = "2024"
-publish = false
 authors = ["Cody <cody@dkdc.io>"]
 description = "Desktop app for draw"
 repository = "https://github.com/dkdc-io/draw"
