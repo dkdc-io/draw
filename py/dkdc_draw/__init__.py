@@ -1,3 +1,5 @@
+"""Local-first drawing tool — Python bindings for dkdc-draw."""
+
 import sys
 
 from dkdc_draw.core import (
