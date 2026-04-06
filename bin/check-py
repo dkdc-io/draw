@@ -6,10 +6,15 @@ echo "Running ruff..."
 uv run --only-group dev ruff check .
 uv run --only-group dev ruff format --check .
 
-echo "Building Python bindings for type checking..."
-uv run maturin develop
+# maturin develop and ty check require building PyO3 bindings,
+# which needs the full workspace (including draw-app with GTK deps).
+# Skip in CI — run locally with: uv run maturin develop && uv run ty check
+if [ -z "${CI:-}" ]; then
+    echo "Building Python bindings for type checking..."
+    uv run maturin develop
 
-echo "Running ty..."
-uv run ty check
+    echo "Running ty..."
+    uv run ty check
+fi
 
 echo "Python checks passed!"
