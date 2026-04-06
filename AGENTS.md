@@ -15,6 +15,7 @@ bin/test           # Run all tests
 bin/test-rs        # Rust tests
 bin/format         # Format all code
 bin/install        # Install CLI (Rust + Python)
+bin/build-wasm     # Build WASM bindings (wasm-pack)
 bin/bump-version   # Bump version (--patch, --minor (default), --major)
 ```
 
@@ -41,11 +42,9 @@ crates/draw-webapp/     # Axum webapp (port 1213)
     index.html          # SPA shell
     style.css           # Dark theme
     theme.js            # Centralized constants (colors, sizes, timing)
-    app.js              # Tool state, keyboard shortcuts, document management
-    canvas.js           # Canvas2D rendering engine, pan/zoom
-    elements.js         # Shape drawing functions
+    app.js              # Tool state, keyboard shortcuts, document management, undo/redo
+    canvas.js           # Canvas2D rendering engine, pan/zoom, shape drawing
     interactions.js     # Pointer events, hit testing, selection, move/resize
-    history.js          # Client-side undo/redo with batch support
     api.js              # REST API client
 crates/draw-cli/        # CLI binary (dkdc-draw on crates.io)
   src/main.rs           # Binary entry point
