@@ -428,7 +428,7 @@ impl Renderer {
         }
 
         // Start arrowhead (tip at first point, pointing away from second point)
-        if el.start_arrowhead != Arrowhead::None {
+        if el.start_arrowhead.is_some() {
             let first = &el.points[0];
             let next = &el.points[1];
             let start_tip_x = first.x as f32 + el.x as f32;
