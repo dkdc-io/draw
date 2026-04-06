@@ -43,6 +43,7 @@ TOML_FILES=(
   crates/draw-core/Cargo.toml
   crates/draw-app/Cargo.toml
   crates/draw-webapp/Cargo.toml
+  crates/draw-wasm/Cargo.toml
   crates/draw-cli/Cargo.toml
   crates/draw-py/Cargo.toml
 )
