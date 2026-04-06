@@ -7,6 +7,11 @@ members = [
     "crates/draw-cli",
     "crates/draw-wasm",
 ]
+default-members = [
+    "crates/draw-core",
+    "crates/draw-cli",
+    "crates/draw-wasm",
+]
 exclude = ["crates/draw-py"]
 
 [profile.release]
