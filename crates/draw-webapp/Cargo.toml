@@ -9,6 +9,7 @@ license = "MIT"
 homepage = "https://github.com/dkdc-io/draw"
 keywords = ["graphics", "drawing", "webapp"]
 categories = ["graphics", "web-programming"]
+include = ["src/**/*", "frontend/**/*", "Cargo.toml"]
 
 [lib]
 name = "draw_webapp"
