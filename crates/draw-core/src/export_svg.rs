@@ -2,7 +2,7 @@ use crate::document::Document;
 use crate::element::{Element, ShapeElement};
 use crate::point::Bounds;
 use crate::render::{ARROWHEAD_ANGLE, ARROWHEAD_LENGTH};
-use crate::style::{Arrowhead, FillStyle, FillType};
+use crate::style::{FillStyle, FillType};
 
 // ── Hachure rendering constants ─────────────────────────────────────
 const HACHURE_LINE_WIDTH: f64 = 1.5;
@@ -106,7 +106,7 @@ fn render_element(element: &Element, clip_id: &mut usize) -> (String, String) {
                 ));
 
                 // Start arrowhead (tip at first point, pointing away from second point)
-                if e.start_arrowhead != Arrowhead::None {
+                if e.start_arrowhead.is_some() {
                     let first = &e.points[0];
                     let next = &e.points[1];
                     let start_angle = (first.y - next.y).atan2(first.x - next.x);
