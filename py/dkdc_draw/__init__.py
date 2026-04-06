@@ -3,6 +3,7 @@
 import sys
 
 from dkdc_draw.core import (
+    export_png,
     export_svg,
     load_document,
     new_document,
@@ -18,6 +19,7 @@ __all__ = [
     "load_document",
     "save_document",
     "export_svg",
+    "export_png",
 ]
 
 

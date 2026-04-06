@@ -62,3 +62,18 @@ def export_svg(json: str) -> str:
         RuntimeError: If the JSON is invalid.
     """
     ...
+
+def export_png(json: str, scale: float = 2.0) -> bytes:
+    """Export a drawing document to PNG bytes.
+
+    Args:
+        json: JSON string representing the document.
+        scale: Scale factor for the output (default 2.0 for retina quality).
+
+    Returns:
+        PNG image data as bytes.
+
+    Raises:
+        RuntimeError: If the JSON is invalid or rendering fails.
+    """
+    ...

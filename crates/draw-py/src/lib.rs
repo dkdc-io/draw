@@ -40,6 +40,14 @@ fn export_svg(json: String) -> PyResult<String> {
     Ok(draw_core::export_svg(&doc))
 }
 
+#[pyfunction]
+#[pyo3(signature = (json, scale=2.0))]
+fn export_png(json: String, scale: f32) -> PyResult<Vec<u8>> {
+    let doc: draw_core::Document = serde_json::from_str(&json)
+        .map_err(|e| PyErr::new::<PyRuntimeError, _>(e.to_string()))?;
+    draw_core::export_png_with_scale(&doc, scale).map_err(to_py_err)
+}
+
 #[pymodule]
 mod core {
     use super::*;
@@ -51,6 +59,7 @@ mod core {
         m.add_function(wrap_pyfunction!(load_document, m)?)?;
         m.add_function(wrap_pyfunction!(save_document, m)?)?;
         m.add_function(wrap_pyfunction!(export_svg, m)?)?;
+        m.add_function(wrap_pyfunction!(export_png, m)?)?;
         Ok(())
     }
 }
