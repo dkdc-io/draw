@@ -1,6 +1,6 @@
 [package]
 name = "dkdc-draw"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 authors = ["Cody <cody@dkdc.io>"]
 description = "Local-first drawing tool"
@@ -25,7 +25,7 @@ webapp = ["dep:dkdc-draw-webapp"]
 
 [dependencies]
 anyhow = "1"
-dkdc-draw-core = { version = "0.1.0", path = "../draw-core" }
-dkdc-draw-app = { version = "0.1.0", path = "../draw-app", optional = true }
-dkdc-draw-webapp = { version = "0.1.0", path = "../draw-webapp", optional = true }
+dkdc-draw-core = { version = "0.1.1", path = "../draw-core" }
+dkdc-draw-app = { version = "0.1.1", path = "../draw-app", optional = true }
+dkdc-draw-webapp = { version = "0.1.1", path = "../draw-webapp", optional = true }
 clap = { version = "4.5", features = ["derive"] }

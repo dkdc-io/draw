@@ -1,6 +1,6 @@
 [package]
 name = "dkdc-draw-webapp"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 authors = ["Cody <cody@dkdc.io>"]
 description = "Webapp for draw (axum)"
@@ -17,7 +17,7 @@ path = "src/lib.rs"
 
 [dependencies]
 anyhow = "1"
-dkdc-draw-core = { version = "0.1.0", path = "../draw-core" }
+dkdc-draw-core = { version = "0.1.1", path = "../draw-core" }
 axum = "0.8"
 open = "5"
 serde = { version = "1", features = ["derive"] }
