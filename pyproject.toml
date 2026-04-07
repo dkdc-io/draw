@@ -1,6 +1,6 @@
 [project]
 name = "dkdc-draw"
-version = "0.2.0"
+version = "0.2.1"
 description = "Local-first drawing tool"
 authors = [{ name = "Cody", email = "cody@dkdc.io" }]
 requires-python = ">=3.11"
