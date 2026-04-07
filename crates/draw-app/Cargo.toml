@@ -1,6 +1,6 @@
 [package]
 name = "dkdc-draw-app"
-version = "0.1.1"
+version = "0.2.0"
 edition = "2024"
 authors = ["Cody <cody@dkdc.io>"]
 description = "Desktop app for draw"
@@ -17,8 +17,8 @@ path = "src/lib.rs"
 [dependencies]
 anyhow = "1"
 axum = "0.8"
-dkdc-draw-core = { version = "0.1.1", path = "../draw-core" }
-dkdc-draw-webapp = { version = "0.1.1", path = "../draw-webapp" }
+dkdc-draw-core = { version = "0.2.0", path = "../draw-core" }
+dkdc-draw-webapp = { version = "0.2.0", path = "../draw-webapp" }
 tao = "0.35"
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "net"] }
 wry = "0.55"

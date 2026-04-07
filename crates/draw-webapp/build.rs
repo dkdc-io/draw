@@ -21,6 +21,11 @@ fn main() {
 
     println!("cargo:warning=WASM artifacts missing, building with wasm-pack...");
 
+    // Ensure the wasm32 target is installed (CI may not have it)
+    let _ = Command::new("rustup")
+        .args(["target", "add", "wasm32-unknown-unknown"])
+        .status();
+
     let wasm_crate = manifest_path.join("../draw-wasm");
     let out_dir = manifest_path.join("../../target/wasm-pkg");
 
