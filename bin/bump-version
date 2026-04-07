@@ -88,9 +88,23 @@ for f in crates/draw-app/Cargo.toml crates/draw-webapp/Cargo.toml crates/draw-cl
   sed -i '' "s/dkdc-draw-core = { version = \"$CURRENT\"/dkdc-draw-core = { version = \"$NEW\"/" "$f"
   echo "  updated dep version in $f"
 done
+# draw-wasm uses an aliased dependency on draw-core
+for f in crates/draw-wasm/Cargo.toml; do
+  sed -i '' "s/version = \"$CURRENT\", path = \"..\/draw-core\"/version = \"$NEW\", path = \"..\/draw-core\"/" "$f"
+  echo "  updated dep version in $f"
+done
+for f in crates/draw-app/Cargo.toml; do
+  sed -i '' "s/dkdc-draw-webapp = { version = \"$CURRENT\"/dkdc-draw-webapp = { version = \"$NEW\"/" "$f"
+  echo "  updated dep version in $f"
+done
 for f in crates/draw-cli/Cargo.toml; do
   sed -i '' "s/dkdc-draw-app = { version = \"$CURRENT\"/dkdc-draw-app = { version = \"$NEW\"/" "$f"
   sed -i '' "s/dkdc-draw-webapp = { version = \"$CURRENT\"/dkdc-draw-webapp = { version = \"$NEW\"/" "$f"
+  echo "  updated dep versions in $f"
+done
+for f in crates/draw-py/Cargo.toml; do
+  sed -i '' "s/dkdc-draw = { version = \"$CURRENT\"/dkdc-draw = { version = \"$NEW\"/" "$f"
+  sed -i '' "s/dkdc-draw-core = { version = \"$CURRENT\"/dkdc-draw-core = { version = \"$NEW\"/" "$f"
   echo "  updated dep versions in $f"
 done
 
