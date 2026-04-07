@@ -3,6 +3,6 @@ set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
 echo "Installing draw CLI..."
-cargo install --path crates/draw-cli --features webapp --force
+cargo install --path crates/draw-cli --features app --force
 
 echo "Rust install complete!"

@@ -608,7 +608,7 @@ dependencies = [
 
 [[package]]
 name = "dkdc-draw"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "anyhow",
  "clap",
@@ -619,7 +619,7 @@ dependencies = [
 
 [[package]]
 name = "dkdc-draw-app"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "anyhow",
  "axum",
@@ -632,7 +632,7 @@ dependencies = [
 
 [[package]]
 name = "dkdc-draw-core"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "anyhow",
  "chrono",
@@ -647,7 +647,7 @@ dependencies = [
 
 [[package]]
 name = "dkdc-draw-wasm"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "chrono",
  "dkdc-draw-core",
@@ -660,7 +660,7 @@ dependencies = [
 
 [[package]]
 name = "dkdc-draw-webapp"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "anyhow",
  "axum",
