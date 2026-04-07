@@ -7,6 +7,9 @@ description = "WASM bindings for draw renderer"
 repository = "https://github.com/dkdc-io/draw"
 license = "MIT"
 
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
 [lib]
 name = "draw_wasm"
 path = "src/lib.rs"
