@@ -201,7 +201,7 @@ class App {
 
   initStyles() {
     // Quick-access color swatches
-    const quickColors = ['#e2e8f0', '#3b82f6', '#ef4444', '#34d399', '#f59e0b', '#a855f7'];
+    const quickColors = ['#a855f7', '#3b82f6', '#e2e8f0', '#ef4444', '#34d399', '#f59e0b'];
     for (const wrap of document.querySelectorAll('.quick-colors')) {
       const target = wrap.dataset.target; // 'stroke' or 'fill'
       for (const color of quickColors) {

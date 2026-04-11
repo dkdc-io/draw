@@ -7,8 +7,8 @@ const THEME = {
   gridColor: 'rgba(59, 130, 246, 0.08)',
 
   // Element defaults
-  strokeColor: '#e2e8f0',
-  fillColor: '#3b82f6',
+  strokeColor: '#a855f7',
+  fillColor: '#a855f7',
   fontFamily: 'Inter, sans-serif',
   fontWeight: '500',
   fontSize: 20,

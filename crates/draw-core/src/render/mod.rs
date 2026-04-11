@@ -31,9 +31,9 @@ const GRID_G: u8 = 130;
 const GRID_B: u8 = 246;
 const GRID_ALPHA: f32 = 0.08;
 
-const DEFAULT_STROKE_R: u8 = 226;
-const DEFAULT_STROKE_G: u8 = 232;
-const DEFAULT_STROKE_B: u8 = 240;
+const DEFAULT_STROKE_R: u8 = 168;
+const DEFAULT_STROKE_G: u8 = 85;
+const DEFAULT_STROKE_B: u8 = 247;
 
 const ACCENT_R: u8 = 59;
 const ACCENT_G: u8 = 130;

@@ -2,9 +2,9 @@ use serde::{Deserialize, Serialize};
 
 // ── Defaults ─────────────────────────────────────────────────────────
 
-pub const DEFAULT_STROKE_COLOR: &str = "#e2e8f0";
+pub const DEFAULT_STROKE_COLOR: &str = "#a855f7";
 pub const DEFAULT_STROKE_WIDTH: f64 = 2.0;
-pub const DEFAULT_FILL_COLOR: &str = "#3b82f6";
+pub const DEFAULT_FILL_COLOR: &str = "#a855f7";
 pub const DEFAULT_FONT_FAMILY: &str = "Inter, sans-serif";
 pub const DEFAULT_FONT_SIZE: f64 = 20.0;
 
