@@ -7,8 +7,7 @@ use crate::style::{FillStyle, FillType};
 use super::path::*;
 use super::{
     CORNER_RADIUS, GRID_ALPHA, GRID_B, GRID_G, GRID_MIN_SCREEN_PX, GRID_R, GRID_SIZE,
-    HACHURE_ALPHA, HACHURE_LINE_WIDTH, TEXT_CHAR_WIDTH_FACTOR, TEXT_LINE_HEIGHT_FACTOR,
-    TEXT_MIN_CHARS, parse_color, stroke_from_style,
+    HACHURE_ALPHA, HACHURE_LINE_WIDTH, parse_color, stroke_from_style,
 };
 
 impl super::Renderer {
@@ -178,43 +177,13 @@ impl super::Renderer {
 
     fn draw_text(
         &self,
-        pixmap: &mut Pixmap,
-        el: &TextElement,
-        transform: &Transform,
-        opacity: f32,
+        _pixmap: &mut Pixmap,
+        _el: &TextElement,
+        _transform: &Transform,
+        _opacity: f32,
     ) {
-        let size = el.font.size as f32;
-        let lines: Vec<&str> = el.text.split('\n').collect();
-        let max_chars = lines.iter().map(|l| l.chars().count()).max().unwrap_or(0) as f32;
-        let w = (max_chars * size * TEXT_CHAR_WIDTH_FACTOR).max(size * TEXT_MIN_CHARS);
-        let h = (lines.len() as f32 * size * TEXT_LINE_HEIGHT_FACTOR)
-            .max(size * TEXT_LINE_HEIGHT_FACTOR);
-        let x = el.x as f32;
-        let y = el.y as f32;
-
-        let color = parse_color(&el.stroke.color, opacity * 0.3);
-        let rect = Rect::from_xywh(x, y, w.max(1.0), h.max(1.0));
-        if let Some(rect) = rect {
-            let mut paint = Paint::default();
-            paint.set_color(color);
-            paint.anti_alias = true;
-            pixmap.fill_rect(rect, &paint, *transform, None);
-
-            let border_color = parse_color(&el.stroke.color, opacity * 0.5);
-            let mut border_paint = Paint::default();
-            border_paint.set_color(border_color);
-            border_paint.anti_alias = true;
-            let stroke = Stroke {
-                width: 1.0,
-                dash: StrokeDash::new(vec![3.0, 3.0], 0.0),
-                ..Stroke::default()
-            };
-            let mut pb = PathBuilder::new();
-            pb.push_rect(rect);
-            if let Some(path) = pb.finish() {
-                pixmap.stroke_path(&path, &border_paint, &stroke, *transform, None);
-            }
-        }
+        // Text is rendered by the browser via canvas overlays (renderTextOverlays).
+        // The WASM renderer intentionally draws nothing here.
     }
 
     // ── Fill patterns ───────────────────────────────────────────────
