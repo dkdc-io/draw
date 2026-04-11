@@ -20,5 +20,10 @@ axum = "0.8"
 dkdc-draw-core = { version = "0.2.1", path = "../draw-core" }
 dkdc-draw-webapp = { version = "0.2.1", path = "../draw-webapp" }
 tao = "0.35"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2-app-kit = { version = "0.3", features = ["NSApplication", "NSMenu", "NSMenuItem", "NSResponder"], default-features = false }
+objc2-foundation = { version = "0.3", features = ["NSString"], default-features = false }
+objc2 = "0.6"
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "net"] }
 wry = "0.55"

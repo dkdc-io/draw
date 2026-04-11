@@ -271,6 +271,20 @@ impl DrawEngine {
         }
     }
 
+    /// Replace an element in-place without recording history.
+    /// Used for live preview during creation/drawing so undo stays clean.
+    pub fn replace_element(&mut self, json: &str) -> bool {
+        match serde_json::from_str::<Element>(json) {
+            Ok(el) => {
+                let id = el.id().to_string();
+                self.document.remove_element(&id);
+                self.document.add_element(el);
+                true
+            }
+            Err(_) => false,
+        }
+    }
+
     /// Move an element to absolute position (x, y).
     pub fn move_element(&mut self, id: &str, x: f64, y: f64) {
         if let Some(el) = self.document.get_element(id) {
@@ -283,26 +297,8 @@ impl DrawEngine {
                 dy,
             });
         }
-        // Apply the move by setting position on the actual element
         if let Some(el) = self.document.get_element_mut(id) {
-            match el {
-                Element::Rectangle(e) | Element::Ellipse(e) | Element::Diamond(e) => {
-                    e.x = x;
-                    e.y = y;
-                }
-                Element::Line(e) | Element::Arrow(e) => {
-                    e.x = x;
-                    e.y = y;
-                }
-                Element::FreeDraw(e) => {
-                    e.x = x;
-                    e.y = y;
-                }
-                Element::Text(e) => {
-                    e.x = x;
-                    e.y = y;
-                }
-            }
+            el.set_position(x, y);
         }
     }
 
@@ -415,7 +411,7 @@ impl DrawEngine {
     /// Undo the last action. Returns true if something was undone.
     pub fn undo(&mut self) -> bool {
         if let Some(action) = self.history.pop_undo() {
-            self.apply_undo(action);
+            self.apply_action(action, true);
             true
         } else {
             false
@@ -425,7 +421,7 @@ impl DrawEngine {
     /// Redo the last undone action. Returns true if something was redone.
     pub fn redo(&mut self) -> bool {
         if let Some(action) = self.history.pop_redo() {
-            self.apply_redo(action);
+            self.apply_action(action, false);
             true
         } else {
             false
@@ -606,33 +602,30 @@ impl DrawEngine {
 // ── Private helpers (not exposed to JS) ─────────────────────────────────
 
 impl DrawEngine {
-    fn apply_undo(&mut self, action: Action) {
+    /// Apply an action for undo (`reverse = true`) or redo (`reverse = false`).
+    fn apply_action(&mut self, action: Action, reverse: bool) {
         match action {
             Action::AddElement(el) => {
-                self.document.remove_element(el.id());
+                if reverse {
+                    self.document.remove_element(el.id());
+                } else {
+                    self.document.add_element(*el);
+                }
             }
-            Action::RemoveElement(_, el) => {
-                self.document.add_element(*el);
+            Action::RemoveElement(id, el) => {
+                if reverse {
+                    self.document.add_element(*el);
+                } else {
+                    self.document.remove_element(&id);
+                }
             }
             Action::MoveElement { id, dx, dy } => {
                 if let Some(el) = self.document.get_element_mut(&id) {
-                    match el {
-                        Element::Rectangle(e) | Element::Ellipse(e) | Element::Diamond(e) => {
-                            e.x -= dx;
-                            e.y -= dy;
-                        }
-                        Element::Line(e) | Element::Arrow(e) => {
-                            e.x -= dx;
-                            e.y -= dy;
-                        }
-                        Element::FreeDraw(e) => {
-                            e.x -= dx;
-                            e.y -= dy;
-                        }
-                        Element::Text(e) => {
-                            e.x -= dx;
-                            e.y -= dy;
-                        }
+                    let (x, y) = el.position();
+                    if reverse {
+                        el.set_position(x - dx, y - dy);
+                    } else {
+                        el.set_position(x + dx, y + dy);
                     }
                 }
             }
@@ -642,85 +635,41 @@ impl DrawEngine {
                 old_y,
                 old_width,
                 old_height,
-                ..
-            } => {
-                if let Some(Element::Rectangle(e) | Element::Ellipse(e) | Element::Diamond(e)) =
-                    self.document.get_element_mut(&id)
-                {
-                    e.x = old_x;
-                    e.y = old_y;
-                    e.width = old_width;
-                    e.height = old_height;
-                }
-            }
-            Action::UpdateElement { id, before, .. } => {
-                if let Some(el) = self.document.get_element_mut(&id) {
-                    *el = *before;
-                }
-            }
-            Action::Batch(actions) => {
-                for a in actions.into_iter().rev() {
-                    self.apply_undo(a);
-                }
-            }
-        }
-    }
-
-    fn apply_redo(&mut self, action: Action) {
-        match action {
-            Action::AddElement(el) => {
-                self.document.add_element(*el);
-            }
-            Action::RemoveElement(id, _) => {
-                self.document.remove_element(&id);
-            }
-            Action::MoveElement { id, dx, dy } => {
-                if let Some(el) = self.document.get_element_mut(&id) {
-                    match el {
-                        Element::Rectangle(e) | Element::Ellipse(e) | Element::Diamond(e) => {
-                            e.x += dx;
-                            e.y += dy;
-                        }
-                        Element::Line(e) | Element::Arrow(e) => {
-                            e.x += dx;
-                            e.y += dy;
-                        }
-                        Element::FreeDraw(e) => {
-                            e.x += dx;
-                            e.y += dy;
-                        }
-                        Element::Text(e) => {
-                            e.x += dx;
-                            e.y += dy;
-                        }
-                    }
-                }
-            }
-            Action::ResizeElement {
-                id,
                 new_x,
                 new_y,
                 new_width,
                 new_height,
-                ..
             } => {
                 if let Some(Element::Rectangle(e) | Element::Ellipse(e) | Element::Diamond(e)) =
                     self.document.get_element_mut(&id)
                 {
-                    e.x = new_x;
-                    e.y = new_y;
-                    e.width = new_width;
-                    e.height = new_height;
+                    if reverse {
+                        e.x = old_x;
+                        e.y = old_y;
+                        e.width = old_width;
+                        e.height = old_height;
+                    } else {
+                        e.x = new_x;
+                        e.y = new_y;
+                        e.width = new_width;
+                        e.height = new_height;
+                    }
                 }
             }
-            Action::UpdateElement { id, after, .. } => {
+            Action::UpdateElement { id, before, after } => {
                 if let Some(el) = self.document.get_element_mut(&id) {
-                    *el = *after;
+                    *el = if reverse { *before } else { *after };
                 }
             }
             Action::Batch(actions) => {
-                for a in actions {
-                    self.apply_redo(a);
+                if reverse {
+                    for a in actions.into_iter().rev() {
+                        self.apply_action(a, true);
+                    }
+                } else {
+                    for a in actions {
+                        self.apply_action(a, false);
+                    }
                 }
             }
         }

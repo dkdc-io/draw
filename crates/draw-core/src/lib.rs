@@ -2,6 +2,7 @@ pub mod document;
 pub mod element;
 pub mod export_png;
 pub mod export_svg;
+pub mod geometry;
 pub mod history;
 pub mod point;
 pub mod render;

@@ -36,17 +36,8 @@ class Interactions {
     return { x: e.clientX - rect.left, y: e.clientY - rect.top };
   }
 
-  // Get element JSON from engine, parsed
-  getElement(id) {
-    const json = this.engine.get_element(id);
-    if (!json) return null;
-    try { return JSON.parse(json); } catch { return null; }
-  }
-
-  // Get selection as array of IDs
-  getSelection() {
-    try { return JSON.parse(this.engine.get_selection()); } catch { return []; }
-  }
+  getElement(id) { return getElement(this.engine, id); }
+  getSelection() { return getSelection(this.engine); }
 
   onPointerDown(e) {
     const screen = this.canvasXY(e);
@@ -184,9 +175,8 @@ class Interactions {
         el.width = snapped.x - this.startWorld.x;
         el.height = snapped.y - this.startWorld.y;
       }
-      // Update in engine: remove old, add updated
-      this.engine.remove_element(el.id);
-      this.engine.add_element(JSON.stringify(el));
+      // Update preview in-place (no undo history)
+      this.engine.replace_element(JSON.stringify(el));
       this.dc.markDirty();
       return;
     }
@@ -198,9 +188,8 @@ class Interactions {
         y: world.y - el.y,
       });
       el.points = this.drawingPoints;
-      // Update in engine
-      this.engine.remove_element(el.id);
-      this.engine.add_element(JSON.stringify(el));
+      // Update preview in-place (no undo history)
+      this.engine.replace_element(JSON.stringify(el));
       this.dc.markDirty();
       return;
     }
@@ -303,13 +292,10 @@ class Interactions {
           return;
         }
       }
-      // The element is already in the engine from the preview adds.
-      // Remove and re-add with final state to get a clean undo entry.
-      // KNOWN ISSUE: intermediate preview states remain in undo history,
-      // so Ctrl+Z shows the shape being redrawn incrementally instead of
-      // a single undo step. Fix requires either batching preview adds into
-      // a single Action::Batch, or storing previews outside the history.
-      this.engine.remove_element(el.id);
+      // Undo the initial add_element from pointerdown (removes the preview
+      // from the document and clears its history entry), then re-add with
+      // the final geometry so undo/redo records the correct shape.
+      this.engine.undo();
       this.engine.add_element(JSON.stringify(el));
       this.engine.clear_selection();
       this.engine.add_to_selection(el.id);
@@ -327,8 +313,8 @@ class Interactions {
     if (this.state === 'drawing' && this.creatingElement) {
       const el = this.creatingElement;
       if (el.points.length > 1) {
-        // Re-add final state
-        this.engine.remove_element(el.id);
+        // Same pattern as shape creation: clean undo entry
+        this.engine.undo();
         this.engine.add_element(JSON.stringify(el));
         this.engine.clear_selection();
         this.engine.add_to_selection(el.id);

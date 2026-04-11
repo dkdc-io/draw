@@ -14,6 +14,7 @@ const APP_JS: &str = include_str!("../frontend/app.js");
 const CANVAS_JS: &str = include_str!("../frontend/canvas.js");
 const INTERACTIONS_JS: &str = include_str!("../frontend/interactions.js");
 const API_JS: &str = include_str!("../frontend/api.js");
+const HELPERS_JS: &str = include_str!("../frontend/helpers.js");
 const THEME_JS: &str = include_str!("../frontend/theme.js");
 const FAVICON: &[u8] = include_bytes!("../frontend/favicon.png");
 const WASM_GLUE_JS: &str = include_str!("../frontend/wasm_glue.js");
@@ -30,15 +31,46 @@ pub fn create_router(open_id: Option<String>) -> Router {
 
     Router::new()
         .route("/", get(index))
-        .route("/style.css", get(serve_css))
-        .route("/favicon.png", get(serve_favicon))
-        .route("/theme.js", get(serve_theme_js))
-        .route("/app.js", get(serve_app_js))
-        .route("/canvas.js", get(serve_canvas_js))
-        .route("/interactions.js", get(serve_interactions_js))
-        .route("/api.js", get(serve_api_js))
-        .route("/wasm_glue.js", get(serve_wasm_glue_js))
-        .route("/draw_wasm_bg.wasm", get(serve_wasm_bg))
+        .route(
+            "/style.css",
+            get(|| async { static_response(STYLE_CSS.as_bytes(), "text/css") }),
+        )
+        .route(
+            "/favicon.png",
+            get(|| async { static_response(FAVICON, "image/png") }),
+        )
+        .route(
+            "/helpers.js",
+            get(|| async { static_response(HELPERS_JS.as_bytes(), "application/javascript") }),
+        )
+        .route(
+            "/theme.js",
+            get(|| async { static_response(THEME_JS.as_bytes(), "application/javascript") }),
+        )
+        .route(
+            "/app.js",
+            get(|| async { static_response(APP_JS.as_bytes(), "application/javascript") }),
+        )
+        .route(
+            "/canvas.js",
+            get(|| async { static_response(CANVAS_JS.as_bytes(), "application/javascript") }),
+        )
+        .route(
+            "/interactions.js",
+            get(|| async { static_response(INTERACTIONS_JS.as_bytes(), "application/javascript") }),
+        )
+        .route(
+            "/api.js",
+            get(|| async { static_response(API_JS.as_bytes(), "application/javascript") }),
+        )
+        .route(
+            "/wasm_glue.js",
+            get(|| async { static_response(WASM_GLUE_JS.as_bytes(), "application/javascript") }),
+        )
+        .route(
+            "/draw_wasm_bg.wasm",
+            get(|| async { static_response(WASM_BG, "application/wasm") }),
+        )
         .route("/api/drawings", get(api::list_drawings))
         .route("/api/drawings", post(api::save_drawing))
         .route("/api/drawings/{id}", get(api::load_drawing))
@@ -50,57 +82,24 @@ pub fn create_router(open_id: Option<String>) -> Router {
 
 async fn index(State(state): State<Arc<AppState>>) -> Html<String> {
     let open_script = if let Some(id) = &state.open_id {
-        format!(r#"<script>window.__OPEN_DRAWING_ID = "{id}";</script>"#)
+        // Validate ID to prevent injection (alphanumeric + hyphens only)
+        if id.chars().all(|c| c.is_ascii_alphanumeric() || c == '-') {
+            format!(r#"<script>window.__OPEN_DRAWING_ID = "{id}";</script>"#)
+        } else {
+            String::new()
+        }
     } else {
         String::new()
     };
     Html(INDEX_HTML.replace("<!-- OPEN_SCRIPT -->", &open_script))
 }
 
-async fn serve_css() -> impl IntoResponse {
+fn static_response(
+    content: &'static [u8],
+    content_type: &'static str,
+) -> impl IntoResponse + use<> {
     let mut headers = HeaderMap::new();
-    headers.insert(header::CONTENT_TYPE, HeaderValue::from_static("text/css"));
-    (headers, STYLE_CSS)
-}
-
-async fn serve_favicon() -> impl IntoResponse {
-    let mut headers = HeaderMap::new();
-    headers.insert(header::CONTENT_TYPE, HeaderValue::from_static("image/png"));
-    (headers, FAVICON)
-}
-async fn serve_theme_js() -> impl IntoResponse {
-    js_response(THEME_JS)
-}
-async fn serve_app_js() -> impl IntoResponse {
-    js_response(APP_JS)
-}
-async fn serve_canvas_js() -> impl IntoResponse {
-    js_response(CANVAS_JS)
-}
-async fn serve_interactions_js() -> impl IntoResponse {
-    js_response(INTERACTIONS_JS)
-}
-async fn serve_api_js() -> impl IntoResponse {
-    js_response(API_JS)
-}
-async fn serve_wasm_glue_js() -> impl IntoResponse {
-    js_response(WASM_GLUE_JS)
-}
-async fn serve_wasm_bg() -> impl IntoResponse {
-    let mut headers = HeaderMap::new();
-    headers.insert(
-        header::CONTENT_TYPE,
-        HeaderValue::from_static("application/wasm"),
-    );
-    (headers, WASM_BG)
-}
-
-fn js_response(content: &'static str) -> impl IntoResponse {
-    let mut headers = HeaderMap::new();
-    headers.insert(
-        header::CONTENT_TYPE,
-        HeaderValue::from_static("application/javascript"),
-    );
+    headers.insert(header::CONTENT_TYPE, HeaderValue::from_static(content_type));
     (headers, content)
 }
 
