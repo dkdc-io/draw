@@ -8,6 +8,44 @@ use wry::WebViewBuilder;
 const DEFAULT_WIDTH: f64 = 1280.0;
 const DEFAULT_HEIGHT: f64 = 800.0;
 
+/// Set up a minimal macOS menu bar with a Quit item (Cmd+Q).
+#[cfg(target_os = "macos")]
+fn setup_macos_menu() {
+    use objc2::{MainThreadMarker, MainThreadOnly};
+    use objc2_app_kit::{NSApplication, NSMenu, NSMenuItem};
+    use objc2_foundation::NSString;
+
+    // Safety: this runs inside tao's event loop which is always on the main thread
+    let mtm = unsafe { MainThreadMarker::new_unchecked() };
+    let app = NSApplication::sharedApplication(mtm);
+
+    let menu_bar = NSMenu::new(mtm);
+
+    // App menu (first item is the application menu on macOS)
+    let app_menu_item = NSMenuItem::new(mtm);
+    let app_menu = NSMenu::new(mtm);
+
+    // Quit item with Cmd+Q
+    let quit_title = NSString::from_str("Quit draw");
+    let quit_key = NSString::from_str("q");
+    let quit_item = unsafe {
+        NSMenuItem::initWithTitle_action_keyEquivalent(
+            NSMenuItem::alloc(mtm),
+            &quit_title,
+            Some(objc2::sel!(terminate:)),
+            &quit_key,
+        )
+    };
+    app_menu.addItem(&quit_item);
+    app_menu_item.setSubmenu(Some(&app_menu));
+    menu_bar.addItem(&app_menu_item);
+
+    app.setMainMenu(Some(&menu_bar));
+}
+
+#[cfg(not(target_os = "macos"))]
+fn setup_macos_menu() {}
+
 pub fn run_app(open_id: Option<String>) -> anyhow::Result<()> {
     // Start the axum webapp on a random available port in a background thread
     let (port_tx, port_rx) = std::sync::mpsc::channel::<u16>();
@@ -39,6 +77,8 @@ pub fn run_app(open_id: Option<String>) -> anyhow::Result<()> {
 
     // Create native window and webview
     let event_loop = EventLoop::new();
+
+    setup_macos_menu();
 
     let window = WindowBuilder::new()
         .with_title("draw")

@@ -33,6 +33,7 @@ class App {
     this.initStyles();
     this.initKeyboard();
     this.initActions();
+    this.initDrawer();
 
     // Auto-save every 30 seconds if dirty
     this._autoSaveTimer = setInterval(() => {
@@ -55,17 +56,8 @@ class App {
     });
   }
 
-  // Helper to get element from engine
-  getElement(id) {
-    const json = this.engine.get_element(id);
-    if (!json) return null;
-    try { return JSON.parse(json); } catch { return null; }
-  }
-
-  // Get selection as array of IDs
-  getSelection() {
-    try { return JSON.parse(this.engine.get_selection()); } catch { return []; }
-  }
+  getElement(id) { return getElement(this.engine, id); }
+  getSelection() { return getSelection(this.engine); }
 
   initToolbar() {
     for (const btn of document.querySelectorAll('.tool-btn')) {
@@ -208,6 +200,32 @@ class App {
   }
 
   initStyles() {
+    // Quick-access color swatches
+    const quickColors = ['#e2e8f0', '#3b82f6', '#ef4444', '#34d399', '#f59e0b', '#a855f7'];
+    for (const wrap of document.querySelectorAll('.quick-colors')) {
+      const target = wrap.dataset.target; // 'stroke' or 'fill'
+      for (const color of quickColors) {
+        const dot = document.createElement('span');
+        dot.className = 'quick-color-dot';
+        dot.style.background = color;
+        dot.title = color;
+        dot.addEventListener('click', () => {
+          document.getElementById(`${target}-color`).value = color;
+          document.getElementById(`${target}-swatch`).style.background = color;
+          this._applyStyleToSelected((el) => {
+            if (target === 'stroke' && el.stroke) return { stroke: { ...el.stroke, color } };
+            if (target === 'fill' && el.fill) {
+              const newFill = { ...el.fill, color };
+              if (newFill.style === 'none') newFill.style = 'hachure';
+              return { fill: newFill };
+            }
+            return {};
+          });
+        });
+        wrap.appendChild(dot);
+      }
+    }
+
     document.getElementById('stroke-color').addEventListener('input', (e) => {
       this._applyStyleToSelected((el) => {
         if (el.stroke) return { stroke: { ...el.stroke, color: e.target.value } };
@@ -600,13 +618,7 @@ class App {
     });
 
     document.getElementById('status-name').addEventListener('click', () => {
-      const currentName = this.engine.document_name();
-      const newName = prompt('Rename document:', currentName);
-      if (newName && newName.trim()) {
-        this.engine.set_document_name(newName.trim());
-        document.getElementById('status-name').textContent = newName.trim();
-        this.isDirty = true;
-      }
+      this._startInlineRename();
     });
 
     document.getElementById('zoom-btn').addEventListener('click', () => {
@@ -616,6 +628,71 @@ class App {
       this.dc.markDirty();
       this.updateStatusZoom();
     });
+  }
+
+  // ── Drawing browser drawer ──────────────────────────────────────
+
+  initDrawer() {
+    const drawer = document.getElementById('drawer');
+    document.getElementById('drawer-toggle').addEventListener('click', () => {
+      const opening = !drawer.classList.contains('open');
+      drawer.classList.toggle('open');
+      if (opening) this.refreshDrawerList();
+    });
+    document.getElementById('drawer-close').addEventListener('click', () => {
+      drawer.classList.remove('open');
+    });
+    document.getElementById('drawer-new').addEventListener('click', async () => {
+      if (this.isDirty) await this.save();
+      this.newDocument();
+      this.refreshDrawerList();
+    });
+  }
+
+  async refreshDrawerList() {
+    const list = document.getElementById('drawer-list');
+    try {
+      const drawings = await API.listDrawings();
+      const currentId = this.engine.document_id();
+      if (drawings.length === 0) {
+        list.innerHTML = '<div class="drawer-empty">No saved drawings yet</div>';
+        return;
+      }
+      list.innerHTML = '';
+      for (const d of drawings) {
+        const item = document.createElement('div');
+        item.className = 'drawer-item' + (d.id === currentId ? ' active' : '');
+        const name = document.createElement('span');
+        name.className = 'drawer-item-name';
+        name.textContent = d.name || d.id;
+        const del = document.createElement('button');
+        del.className = 'drawer-item-delete';
+        del.title = 'Delete';
+        del.textContent = '\u00d7';
+        del.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          if (!confirm(`Delete "${d.name || d.id}"?`)) return;
+          try {
+            await API.deleteDrawing(d.id);
+            if (d.id === this.engine.document_id()) this.newDocument();
+            this.refreshDrawerList();
+          } catch (err) {
+            console.error('Delete failed:', err);
+          }
+        });
+        item.addEventListener('click', async () => {
+          if (d.id === currentId) return;
+          if (this.isDirty) await this.save();
+          await this.loadDrawing(d.id);
+          document.getElementById('drawer').classList.remove('open');
+        });
+        item.appendChild(name);
+        item.appendChild(del);
+        list.appendChild(item);
+      }
+    } catch (e) {
+      list.innerHTML = '<div class="drawer-empty">Failed to load drawings</div>';
+    }
   }
 
   snapPoint(x, y) {
@@ -647,8 +724,11 @@ class App {
   _updateToolStatus() {
     const label = this.currentTool.charAt(0).toUpperCase() + this.currentTool.slice(1);
     const suffix = this.toolLocked ? ' [locked]' : '';
-    const gridSuffix = this.snapToGrid ? ' [Grid]' : '';
-    document.getElementById('status-tool').textContent = label + suffix + gridSuffix;
+    const sel = this.getSelection();
+    const selSuffix = sel.length > 1 ? ` \u00b7 ${sel.length} selected` : '';
+    document.getElementById('status-tool').textContent = label + suffix + selSuffix;
+    const snapBadge = document.getElementById('snap-badge');
+    if (snapBadge) snapBadge.style.display = this.snapToGrid ? '' : 'none';
   }
 
   showContextMenu(e) {
@@ -823,8 +903,8 @@ class App {
     }
     if (count > 0) { cx /= count; cy /= count; }
 
-    const dx = worldPos ? worldPos.x - cx : 20;
-    const dy = worldPos ? worldPos.y - cy : 20;
+    const dx = worldPos ? worldPos.x - cx : THEME.pasteOffset;
+    const dy = worldPos ? worldPos.y - cy : THEME.pasteOffset;
 
     const idMap = new Map();
     const shapesFirst = this._clipboard.filter(e => !e.group_id);
@@ -989,8 +1069,8 @@ class App {
         const newId = generateId();
         idMap.set(el.id, newId);
         dup.id = newId;
-        dup.x += 20;
-        dup.y += 20;
+        dup.x += THEME.pasteOffset;
+        dup.y += THEME.pasteOffset;
         this.engine.add_element(JSON.stringify(dup));
         this.engine.add_to_selection(dup.id);
       }
@@ -1004,8 +1084,8 @@ class App {
           if (bt) {
             const dupText = structuredClone(bt);
             dupText.id = generateId();
-            dupText.x += 20;
-            dupText.y += 20;
+            dupText.x += THEME.pasteOffset;
+            dupText.y += THEME.pasteOffset;
             dupText.group_id = newId;
             this.engine.add_element(JSON.stringify(dupText));
           }
@@ -1301,6 +1381,9 @@ class App {
   }
 
   async exportSvg() {
+    const btn = document.getElementById('btn-export');
+    btn.disabled = true;
+    const savedEl = document.getElementById('status-saved');
     try {
       const doc = this.buildDocument();
       const svg = await API.exportSvg(doc);
@@ -1313,10 +1396,18 @@ class App {
       URL.revokeObjectURL(url);
     } catch (e) {
       console.error('Failed to export:', e);
+      savedEl.textContent = 'Export failed';
+      savedEl.classList.add('error');
+      setTimeout(() => { savedEl.textContent = ''; savedEl.classList.remove('error'); }, 3000);
+    } finally {
+      btn.disabled = false;
     }
   }
 
   async exportPng() {
+    const btn = document.getElementById('btn-export-png');
+    btn.disabled = true;
+    const savedEl = document.getElementById('status-saved');
     try {
       const doc = this.buildDocument();
       const blob = await API.exportPng(doc);
@@ -1328,6 +1419,11 @@ class App {
       URL.revokeObjectURL(url);
     } catch (e) {
       console.error('Failed to export PNG:', e);
+      savedEl.textContent = 'Export failed';
+      savedEl.classList.add('error');
+      setTimeout(() => { savedEl.textContent = ''; savedEl.classList.remove('error'); }, 3000);
+    } finally {
+      btn.disabled = false;
     }
   }
 
@@ -1336,11 +1432,47 @@ class App {
   updateStatus() {
     this.updateStatusName();
     this.updateStatusZoom();
+    this._updateToolStatus();
+    // Show/hide welcome hint based on element count
+    const hint = document.getElementById('welcome-hint');
+    if (hint) {
+      hint.classList.toggle('hidden', this.engine.element_count() > 0);
+    }
   }
 
   updateStatusName() {
+    const el = document.getElementById('status-name');
+    // Don't overwrite if inline rename is active
+    if (el.querySelector('input')) return;
     const name = this.engine.document_name() + (this.isDirty ? ' *' : '');
-    document.getElementById('status-name').textContent = name;
+    el.textContent = name;
+  }
+
+  _startInlineRename() {
+    const el = document.getElementById('status-name');
+    if (el.querySelector('input')) return; // already editing
+    const current = this.engine.document_name();
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = current;
+    input.className = 'status-rename-input';
+    el.textContent = '';
+    el.appendChild(input);
+    input.focus();
+    input.select();
+    const commit = () => {
+      const val = input.value.trim();
+      if (val && val !== current) {
+        this.engine.set_document_name(val);
+        this.isDirty = true;
+      }
+      this.updateStatusName();
+    };
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); commit(); }
+      if (e.key === 'Escape') { e.preventDefault(); this.updateStatusName(); }
+    });
+    input.addEventListener('blur', commit);
   }
 
   updateStatusZoom() {

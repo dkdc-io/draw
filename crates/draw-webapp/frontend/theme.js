@@ -54,6 +54,10 @@ const THEME = {
     'transparent', // none (shows as X)
   ],
 
+  // Layout
+  pasteOffset: 20,
+  zoomFitPadding: 40,
+
   // Timing
   autoSaveIntervalMs: 30_000,
 };

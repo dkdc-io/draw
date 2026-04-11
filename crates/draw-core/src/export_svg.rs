@@ -1,11 +1,10 @@
 use crate::document::Document;
 use crate::element::{Element, ShapeElement};
+use crate::geometry;
 use crate::point::Bounds;
-use crate::render::{ARROWHEAD_ANGLE, ARROWHEAD_LENGTH};
 use crate::style::{FillStyle, FillType};
 
 // ── Hachure rendering constants ─────────────────────────────────────
-const HACHURE_LINE_WIDTH: f64 = 1.5;
 const HACHURE_OPACITY: f64 = 0.5;
 const PERPENDICULAR_OFFSET: f64 = std::f64::consts::FRAC_PI_2;
 
@@ -82,8 +81,6 @@ fn render_element(element: &Element, clip_id: &mut usize) -> (String, String) {
             }
             let stroke = stroke_attrs(&e.stroke.color, e.stroke.width, &e.stroke.dash);
             let marker = if matches!(element, Element::Arrow(_)) {
-                let arrow_len = ARROWHEAD_LENGTH as f64;
-                let arrow_angle = ARROWHEAD_ANGLE as f64;
                 let mut markers = String::new();
 
                 // End arrowhead (tip at last point, pointing away from second-to-last)
@@ -93,15 +90,22 @@ fn render_element(element: &Element, clip_id: &mut usize) -> (String, String) {
                 } else {
                     &e.points[0]
                 };
-                let angle = (last.y - prev.y).atan2(last.x - prev.x);
-                let tip_x = last.x + e.x;
-                let tip_y = last.y + e.y;
-                let left_x = tip_x - arrow_len * (angle - arrow_angle).cos();
-                let left_y = tip_y - arrow_len * (angle - arrow_angle).sin();
-                let right_x = tip_x - arrow_len * (angle + arrow_angle).cos();
-                let right_y = tip_y - arrow_len * (angle + arrow_angle).sin();
+                let ah = geometry::compute_arrowhead(
+                    last.x + e.x,
+                    last.y + e.y,
+                    prev.x + e.x,
+                    prev.y + e.y,
+                    geometry::ARROWHEAD_LENGTH,
+                    geometry::ARROWHEAD_ANGLE,
+                );
                 markers.push_str(&format!(
-                    r#"  <polygon points="{tip_x},{tip_y} {left_x},{left_y} {right_x},{right_y}" fill="{}" stroke="none"/>"#,
+                    r#"  <polygon points="{},{} {},{} {},{}" fill="{}" stroke="none"/>"#,
+                    ah.tip_x,
+                    ah.tip_y,
+                    ah.left_x,
+                    ah.left_y,
+                    ah.right_x,
+                    ah.right_y,
                     e.stroke.color
                 ));
 
@@ -109,15 +113,22 @@ fn render_element(element: &Element, clip_id: &mut usize) -> (String, String) {
                 if e.start_arrowhead.is_some() {
                     let first = &e.points[0];
                     let next = &e.points[1];
-                    let start_angle = (first.y - next.y).atan2(first.x - next.x);
-                    let start_tip_x = first.x + e.x;
-                    let start_tip_y = first.y + e.y;
-                    let start_left_x = start_tip_x - arrow_len * (start_angle - arrow_angle).cos();
-                    let start_left_y = start_tip_y - arrow_len * (start_angle - arrow_angle).sin();
-                    let start_right_x = start_tip_x - arrow_len * (start_angle + arrow_angle).cos();
-                    let start_right_y = start_tip_y - arrow_len * (start_angle + arrow_angle).sin();
+                    let ah = geometry::compute_arrowhead(
+                        first.x + e.x,
+                        first.y + e.y,
+                        next.x + e.x,
+                        next.y + e.y,
+                        geometry::ARROWHEAD_LENGTH,
+                        geometry::ARROWHEAD_ANGLE,
+                    );
                     markers.push_str(&format!(
-                        r#"  <polygon points="{start_tip_x},{start_tip_y} {start_left_x},{start_left_y} {start_right_x},{start_right_y}" fill="{}" stroke="none"/>"#,
+                        r#"  <polygon points="{},{} {},{} {},{}" fill="{}" stroke="none"/>"#,
+                        ah.tip_x,
+                        ah.tip_y,
+                        ah.left_x,
+                        ah.left_y,
+                        ah.right_x,
+                        ah.right_y,
                         e.stroke.color
                     ));
                 }
@@ -308,31 +319,19 @@ fn render_diamond(e: &ShapeElement, clip_id: &mut usize) -> (String, String) {
 /// Generate parallel hachure lines across a bounding box at the given angle.
 /// Returns SVG `<line>` elements as a string. Lines span from -diag to +diag
 /// (rotated around center) so they fully cover the shape before clipping.
-fn generate_hachure_lines(bounds: &Bounds, color: &str, gap: f64, angle: f64) -> String {
+fn generate_hachure_lines_svg(bounds: &Bounds, color: &str, gap: f64, angle: f64) -> String {
     let cx = bounds.x + bounds.width / 2.0;
     let cy = bounds.y + bounds.height / 2.0;
-    let diag = (bounds.width * bounds.width + bounds.height * bounds.height).sqrt();
 
-    let cos_a = angle.cos();
-    let sin_a = angle.sin();
-
-    let mut lines = String::new();
-    let mut d = -diag;
-    while d < diag {
-        // Line endpoints before rotation: (d, -diag) to (d, diag)
-        // After rotation around center:
-        let x1 = cx + d * cos_a - (-diag) * sin_a;
-        let y1 = cy + d * sin_a + (-diag) * cos_a;
-        let x2 = cx + d * cos_a - diag * sin_a;
-        let y2 = cy + d * sin_a + diag * cos_a;
-
-        lines.push_str(&format!(
-            r#"    <line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke="{color}" stroke-width="{HACHURE_LINE_WIDTH}" stroke-linecap="round"/>"#
+    let mut svg = String::new();
+    for line in geometry::generate_hachure_lines(cx, cy, bounds.width, bounds.height, gap, angle) {
+        svg.push_str(&format!(
+            r#"    <line x1="{}" y1="{}" x2="{}" y2="{}" stroke="{color}" stroke-width="{}" stroke-linecap="round"/>"#,
+            line.x1, line.y1, line.x2, line.y2, geometry::HACHURE_LINE_WIDTH
         ));
-        lines.push('\n');
-        d += gap;
+        svg.push('\n');
     }
-    lines
+    svg
 }
 
 /// Render a `<g>` group with clip-path containing hachure lines.
@@ -342,10 +341,10 @@ fn render_hachure_group(clip_id: &str, bounds: &Bounds, fill: &FillStyle, opacit
     let gap = fill.gap;
     let angle = fill.angle;
 
-    let mut lines = generate_hachure_lines(bounds, color, gap, angle);
+    let mut lines = generate_hachure_lines_svg(bounds, color, gap, angle);
 
     if fill.style == FillType::CrossHatch {
-        lines.push_str(&generate_hachure_lines(
+        lines.push_str(&generate_hachure_lines_svg(
             bounds,
             color,
             gap,

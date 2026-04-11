@@ -3,6 +3,18 @@ use serde::{Deserialize, Serialize};
 use crate::point::{Bounds, Point};
 use crate::style::{Arrowhead, FillStyle, FontStyle, StrokeStyle};
 
+/// Dispatch through all Element variants, binding the inner struct to `$e`.
+macro_rules! with_element {
+    ($self:expr, $e:ident => $body:expr) => {
+        match $self {
+            Element::Rectangle($e) | Element::Ellipse($e) | Element::Diamond($e) => $body,
+            Element::Line($e) | Element::Arrow($e) => $body,
+            Element::FreeDraw($e) => $body,
+            Element::Text($e) => $body,
+        }
+    };
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub enum Element {
@@ -17,12 +29,7 @@ pub enum Element {
 
 impl Element {
     pub fn id(&self) -> &str {
-        match self {
-            Self::Rectangle(e) | Self::Ellipse(e) | Self::Diamond(e) => &e.id,
-            Self::Line(e) | Self::Arrow(e) => &e.id,
-            Self::FreeDraw(e) => &e.id,
-            Self::Text(e) => &e.id,
-        }
+        with_element!(self, e => &e.id)
     }
 
     pub fn bounds(&self) -> Bounds {
@@ -31,57 +38,49 @@ impl Element {
                 Bounds::new(e.x, e.y, e.width, e.height)
             }
             Self::Line(e) | Self::Arrow(e) => {
-                let abs_points: Vec<Point> = e
+                let abs: Vec<Point> = e
                     .points
                     .iter()
                     .map(|p| Point::new(p.x + e.x, p.y + e.y))
                     .collect();
-                Bounds::from_points(&abs_points).unwrap_or(Bounds::new(e.x, e.y, 0.0, 0.0))
+                Bounds::from_points(&abs).unwrap_or(Bounds::new(e.x, e.y, 0.0, 0.0))
             }
             Self::FreeDraw(e) => {
-                let abs_points: Vec<Point> = e
+                let abs: Vec<Point> = e
                     .points
                     .iter()
                     .map(|p| Point::new(p.x + e.x, p.y + e.y))
                     .collect();
-                Bounds::from_points(&abs_points).unwrap_or(Bounds::new(e.x, e.y, 0.0, 0.0))
+                Bounds::from_points(&abs).unwrap_or(Bounds::new(e.x, e.y, 0.0, 0.0))
             }
             Self::Text(e) => {
-                // Approximate text bounds (multiline aware)
                 let lines: Vec<&str> = e.text.split('\n').collect();
-                let max_line_len = lines.iter().map(|l| l.chars().count()).max().unwrap_or(0);
-                let width = max_line_len as f64 * e.font.size * 0.6;
+                let max_len = lines.iter().map(|l| l.chars().count()).max().unwrap_or(0);
+                let width = max_len as f64 * e.font.size * 0.6;
                 let height = lines.len() as f64 * e.font.size * 1.2;
                 Bounds::new(e.x, e.y, width, height)
             }
         }
     }
 
+    pub fn position(&self) -> (f64, f64) {
+        with_element!(self, e => (e.x, e.y))
+    }
+
+    pub fn set_position(&mut self, x: f64, y: f64) {
+        with_element!(self, e => { e.x = x; e.y = y; })
+    }
+
     pub fn opacity(&self) -> f64 {
-        match self {
-            Self::Rectangle(e) | Self::Ellipse(e) | Self::Diamond(e) => e.opacity,
-            Self::Line(e) | Self::Arrow(e) => e.opacity,
-            Self::FreeDraw(e) => e.opacity,
-            Self::Text(e) => e.opacity,
-        }
+        with_element!(self, e => e.opacity)
     }
 
     pub fn is_locked(&self) -> bool {
-        match self {
-            Self::Rectangle(e) | Self::Ellipse(e) | Self::Diamond(e) => e.locked,
-            Self::Line(e) | Self::Arrow(e) => e.locked,
-            Self::FreeDraw(e) => e.locked,
-            Self::Text(e) => e.locked,
-        }
+        with_element!(self, e => e.locked)
     }
 
     pub fn group_id(&self) -> Option<&str> {
-        match self {
-            Self::Rectangle(e) | Self::Ellipse(e) | Self::Diamond(e) => e.group_id.as_deref(),
-            Self::Line(e) | Self::Arrow(e) => e.group_id.as_deref(),
-            Self::FreeDraw(e) => e.group_id.as_deref(),
-            Self::Text(e) => e.group_id.as_deref(),
-        }
+        with_element!(self, e => e.group_id.as_deref())
     }
 }
 

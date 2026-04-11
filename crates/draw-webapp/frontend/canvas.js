@@ -89,6 +89,13 @@ class DrawCanvas {
     // Overlay text using browser-native text rendering
     // (tiny-skia renders text as placeholder rects; real text uses ctx.fillText)
     this.renderTextOverlays();
+
+    // Update welcome hint visibility
+    const hint = document.getElementById('welcome-hint');
+    if (hint) hint.classList.toggle('hidden', this.engine.element_count() > 0);
+
+    // Update selection count in status bar
+    if (window.app) window.app._updateToolStatus();
   }
 
   renderTextOverlays() {
