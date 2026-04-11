@@ -122,7 +122,9 @@ class DrawCanvas {
 
       const lines = t.text.split('\n');
       const lineHeight = t.fontSize * 1.2;
-      const alignX = t.align === 'center' ? t.x + t.width / 2
+      // For center-aligned text (bound to shapes), x is already the
+      // center of the shape -- don't add width/2 again.
+      const alignX = t.align === 'center' ? t.x
                     : t.align === 'right' ? t.x + t.width
                     : t.x;
 
