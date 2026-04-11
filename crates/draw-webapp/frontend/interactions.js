@@ -292,10 +292,9 @@ class Interactions {
           return;
         }
       }
-      // Remove the preview element and undo the initial add (clears its
-      // history entry), then re-add with the final geometry so undo/redo
-      // records the correct shape.
-      this.engine.remove_element(el.id);
+      // Undo the initial add_element from pointerdown (removes the preview
+      // from the document and clears its history entry), then re-add with
+      // the final geometry so undo/redo records the correct shape.
       this.engine.undo();
       this.engine.add_element(JSON.stringify(el));
       this.engine.clear_selection();
@@ -315,7 +314,6 @@ class Interactions {
       const el = this.creatingElement;
       if (el.points.length > 1) {
         // Same pattern as shape creation: clean undo entry
-        this.engine.remove_element(el.id);
         this.engine.undo();
         this.engine.add_element(JSON.stringify(el));
         this.engine.clear_selection();
