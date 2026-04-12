@@ -10,7 +10,7 @@ pub mod storage;
 pub mod style;
 
 pub use document::Document;
-pub use element::{Element, FreeDrawElement, LineElement, ShapeElement, TextElement};
+pub use element::{Binding, Element, FreeDrawElement, LineElement, ShapeElement, TextElement};
 pub use export_png::{export_png, export_png_with_scale};
 pub use export_svg::export_svg;
 pub use point::{Bounds, Point, ViewState};
