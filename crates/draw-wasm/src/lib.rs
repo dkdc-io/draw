@@ -26,6 +26,7 @@ pub struct DrawEngine {
     selection_box: Option<Bounds>,
     history: History,
     pixel_ratio: f32,
+    snap_indicator: Option<(f64, f64)>,
 }
 
 // Methods exposed to JS via wasm_bindgen (wasm32 only) AND available natively.
@@ -53,6 +54,7 @@ impl DrawEngine {
             selection_box: None,
             history: History::new(),
             pixel_ratio,
+            snap_indicator: None,
         }
     }
 
@@ -95,12 +97,19 @@ impl DrawEngine {
     /// Render the current state and return RGBA pixel data.
     pub fn render(&self) -> Vec<u8> {
         let sel_refs: Vec<&str> = self.selected_ids.iter().map(|s| s.as_str()).collect();
-        let pixmap = self.renderer.render(
+        let mut pixmap = self.renderer.render(
             &self.document,
             &self.viewport,
             &sel_refs,
             self.selection_box,
         );
+
+        // Draw snap indicator overlay
+        if let Some((sx, sy)) = self.snap_indicator {
+            self.renderer
+                .draw_snap_indicator(&mut pixmap, &self.viewport, sx, sy);
+        }
+
         pixmap.data().to_vec()
     }
 
@@ -300,6 +309,8 @@ impl DrawEngine {
         if let Some(el) = self.document.get_element_mut(id) {
             el.set_position(x, y);
         }
+        // Update any arrows bound to this element
+        self.update_bound_arrows(id);
     }
 
     /// Resize an element to the given bounds.
@@ -347,6 +358,8 @@ impl DrawEngine {
                 }
             }
         }
+        // Update any arrows bound to this element
+        self.update_bound_arrows(id);
     }
 
     /// Update an element's style from JSON. The JSON should contain style fields
@@ -597,6 +610,71 @@ impl DrawEngine {
     pub fn element_count(&self) -> usize {
         self.document.elements.len()
     }
+
+    // ── Arrow snap / binding ───────────────────────────────────────
+
+    /// Find the nearest snap point on any shape element within threshold.
+    /// `wx, wy` are world coordinates. `exclude_id` is the element to skip
+    /// (typically the arrow being drawn). `threshold` is in world-coordinate distance.
+    /// Returns JSON `{"element_id":"...","x":...,"y":...}` or empty string if no snap.
+    pub fn find_snap_target(&self, wx: f64, wy: f64, threshold: f64, exclude_id: &str) -> String {
+        match draw_core::geometry::find_nearest_snap_point(
+            &self.document.elements,
+            wx,
+            wy,
+            threshold,
+            exclude_id,
+        ) {
+            Some((element_id, x, y)) => {
+                format!(r#"{{"element_id":"{}","x":{},"y":{}}}"#, element_id, x, y)
+            }
+            None => String::new(),
+        }
+    }
+
+    /// Set binding on an arrow endpoint. `endpoint` is "start" or "end".
+    /// `binding_json` is JSON `{"element_id":"...","focus":0,"gap":0}` or empty to clear.
+    pub fn set_arrow_binding(
+        &mut self,
+        arrow_id: &str,
+        endpoint: &str,
+        binding_json: &str,
+    ) -> bool {
+        let binding: Option<draw_core::Binding> = if binding_json.is_empty() {
+            None
+        } else {
+            match serde_json::from_str(binding_json) {
+                Ok(b) => Some(b),
+                Err(_) => return false,
+            }
+        };
+
+        if let Some(Element::Arrow(line)) = self.document.get_element_mut(arrow_id) {
+            match endpoint {
+                "start" => {
+                    line.start_binding = binding;
+                    true
+                }
+                "end" => {
+                    line.end_binding = binding;
+                    true
+                }
+                _ => false,
+            }
+        } else {
+            false
+        }
+    }
+
+    /// Set the snap indicator position (world coordinates) to show during arrow creation.
+    pub fn set_snap_indicator(&mut self, x: f64, y: f64) {
+        self.snap_indicator = Some((x, y));
+    }
+
+    /// Clear the snap indicator.
+    pub fn clear_snap_indicator(&mut self) {
+        self.snap_indicator = None;
+    }
 }
 
 // ── Private helpers (not exposed to JS) ─────────────────────────────────
@@ -674,6 +752,102 @@ impl DrawEngine {
             }
         }
     }
+
+    /// Recompute endpoint positions for all arrows bound to the given element.
+    fn update_bound_arrows(&mut self, target_id: &str) {
+        // Collect arrow IDs and their binding info first to avoid borrow conflicts
+        let updates: Vec<(String, Option<String>, Option<String>)> = self
+            .document
+            .elements
+            .iter()
+            .filter_map(|el| {
+                if let Element::Arrow(line) = el {
+                    let start_bound = line
+                        .start_binding
+                        .as_ref()
+                        .filter(|b| b.element_id == target_id)
+                        .map(|b| b.element_id.clone());
+                    let end_bound = line
+                        .end_binding
+                        .as_ref()
+                        .filter(|b| b.element_id == target_id)
+                        .map(|b| b.element_id.clone());
+                    if start_bound.is_some() || end_bound.is_some() {
+                        Some((line.id.clone(), start_bound, end_bound))
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        if updates.is_empty() {
+            return;
+        }
+
+        // Get target element's current connection points
+        let target_points: Vec<(f64, f64)> = self
+            .document
+            .get_element(target_id)
+            .map(|el| {
+                draw_core::geometry::connection_points(el)
+                    .into_iter()
+                    .map(|cp| (cp.x, cp.y))
+                    .collect()
+            })
+            .unwrap_or_default();
+
+        if target_points.is_empty() {
+            return;
+        }
+
+        for (arrow_id, start_bound, end_bound) in updates {
+            if let Some(Element::Arrow(line)) = self.document.get_element_mut(&arrow_id) {
+                if line.points.len() < 2 {
+                    continue;
+                }
+
+                if start_bound.is_some() {
+                    // Find nearest connection point to current start
+                    let start_abs_x = line.points[0].x + line.x;
+                    let start_abs_y = line.points[0].y + line.y;
+                    let nearest = find_nearest_point(&target_points, start_abs_x, start_abs_y);
+                    // Update: the first point is at (0,0) relative, so move element position
+                    let last_idx = line.points.len() - 1;
+                    let end_abs_x = line.points[last_idx].x + line.x;
+                    let end_abs_y = line.points[last_idx].y + line.y;
+                    line.x = nearest.0;
+                    line.y = nearest.1;
+                    line.points[0] = draw_core::Point::new(0.0, 0.0);
+                    line.points[last_idx] =
+                        draw_core::Point::new(end_abs_x - nearest.0, end_abs_y - nearest.1);
+                }
+
+                if end_bound.is_some() {
+                    let last_idx = line.points.len() - 1;
+                    let end_abs_x = line.points[last_idx].x + line.x;
+                    let end_abs_y = line.points[last_idx].y + line.y;
+                    let nearest = find_nearest_point(&target_points, end_abs_x, end_abs_y);
+                    line.points[last_idx] =
+                        draw_core::Point::new(nearest.0 - line.x, nearest.1 - line.y);
+                }
+            }
+        }
+    }
+}
+
+fn find_nearest_point(points: &[(f64, f64)], x: f64, y: f64) -> (f64, f64) {
+    points
+        .iter()
+        .min_by(|a, b| {
+            let da = (a.0 - x).powi(2) + (a.1 - y).powi(2);
+            let db = (b.0 - x).powi(2) + (b.1 - y).powi(2);
+            da.partial_cmp(&db).unwrap_or(std::cmp::Ordering::Equal)
+        })
+        .copied()
+        .unwrap_or((x, y))
 }
 
 // ── Native tests ────────────────────────────────────────────────────────

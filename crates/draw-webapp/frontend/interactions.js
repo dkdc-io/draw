@@ -12,6 +12,8 @@ class Interactions {
     this.resizeOrigin = null;
     this.drawingPoints = [];
     this.creatingElement = null; // JSON object for element being created (preview)
+    this._startSnap = null;  // {element_id, x, y} if arrow start snapped to a shape
+    this._endSnap = null;    // {element_id, x, y} if arrow end snapped to a shape
 
     this.bind();
   }
@@ -142,7 +144,24 @@ class Interactions {
 
     // Shape creation tools
     this.state = 'creating';
-    const snapped = this.app.snapPoint(world.x, world.y);
+    this._startSnap = null;
+    this._endSnap = null;
+    let snapped = this.app.snapPoint(world.x, world.y);
+
+    // For arrow/line tools, check if start point snaps to a shape connection point
+    if (tool === 'arrow' || tool === 'line') {
+      const threshold = 15 / (this.engine.zoom() || 1);
+      const snapResult = this.engine.find_snap_target(world.x, world.y, threshold, '');
+      if (snapResult) {
+        try {
+          const snap = JSON.parse(snapResult);
+          snapped = { x: snap.x, y: snap.y };
+          this._startSnap = snap;
+          this.engine.set_snap_indicator(snap.x, snap.y);
+        } catch (_) {}
+      }
+    }
+
     const el = this.createElementAt(tool, snapped.x, snapped.y);
     this.creatingElement = el;
     this.startWorld = snapped;
@@ -164,9 +183,26 @@ class Interactions {
     }
 
     if (this.state === 'creating' && this.creatingElement) {
-      const snapped = this.app.snapPoint(world.x, world.y);
+      let snapped = this.app.snapPoint(world.x, world.y);
       const el = this.creatingElement;
       if (el.type === 'Line' || el.type === 'Arrow') {
+        // Check for connection-point snap on the endpoint
+        const threshold = 15 / (this.engine.zoom() || 1);
+        const snapResult = this.engine.find_snap_target(world.x, world.y, threshold, el.id);
+        if (snapResult) {
+          try {
+            const snap = JSON.parse(snapResult);
+            snapped = { x: snap.x, y: snap.y };
+            this._endSnap = snap;
+            this.engine.set_snap_indicator(snap.x, snap.y);
+          } catch (_) {
+            this._endSnap = null;
+            this.engine.clear_snap_indicator();
+          }
+        } else {
+          this._endSnap = null;
+          this.engine.clear_snap_indicator();
+        }
         el.points = [
           { x: 0, y: 0 },
           { x: snapped.x - el.x, y: snapped.y - el.y },
@@ -276,6 +312,9 @@ class Interactions {
           // Undo the add action that was recorded
           this.engine.undo();
           this.creatingElement = null;
+          this._startSnap = null;
+          this._endSnap = null;
+          this.engine.clear_snap_indicator();
           this.state = 'idle';
           this.dc.markDirty();
           return;
@@ -287,6 +326,9 @@ class Interactions {
           this.engine.remove_element(el.id);
           this.engine.undo();
           this.creatingElement = null;
+          this._startSnap = null;
+          this._endSnap = null;
+          this.engine.clear_snap_indicator();
           this.state = 'idle';
           this.dc.markDirty();
           return;
@@ -297,6 +339,22 @@ class Interactions {
       // the final geometry so undo/redo records the correct shape.
       this.engine.undo();
       this.engine.add_element(JSON.stringify(el));
+
+      // Attach arrow bindings if snapped to connection points
+      if ((el.type === 'Arrow' || el.type === 'Line') && (this._startSnap || this._endSnap)) {
+        if (this._startSnap) {
+          this.engine.set_arrow_binding(el.id, 'start',
+            JSON.stringify({ element_id: this._startSnap.element_id, focus: 0, gap: 0 }));
+        }
+        if (this._endSnap) {
+          this.engine.set_arrow_binding(el.id, 'end',
+            JSON.stringify({ element_id: this._endSnap.element_id, focus: 0, gap: 0 }));
+        }
+      }
+      this._startSnap = null;
+      this._endSnap = null;
+      this.engine.clear_snap_indicator();
+
       this.engine.clear_selection();
       this.engine.add_to_selection(el.id);
       this.creatingElement = null;
@@ -508,9 +566,9 @@ class Interactions {
       case 'diamond':
         return { type: 'Diamond', id, x: wx, y: wy, width: 0, height: 0, angle: 0, stroke, fill, opacity, locked: false, group_id: null };
       case 'line':
-        return { type: 'Line', id, x: wx, y: wy, points: [{ x: 0, y: 0 }], stroke, start_arrowhead: null, end_arrowhead: null, opacity, locked: false, group_id: null };
+        return { type: 'Line', id, x: wx, y: wy, points: [{ x: 0, y: 0 }], stroke, start_arrowhead: null, end_arrowhead: null, opacity, locked: false, group_id: null, start_binding: null, end_binding: null };
       case 'arrow':
-        return { type: 'Arrow', id, x: wx, y: wy, points: [{ x: 0, y: 0 }], stroke, start_arrowhead: null, end_arrowhead: "arrow", opacity, locked: false, group_id: null };
+        return { type: 'Arrow', id, x: wx, y: wy, points: [{ x: 0, y: 0 }], stroke, start_arrowhead: null, end_arrowhead: "arrow", opacity, locked: false, group_id: null, start_binding: null, end_binding: null };
       default:
         return { type: 'Rectangle', id, x: wx, y: wy, width: 0, height: 0, angle: 0, stroke, fill, opacity, locked: false, group_id: null };
     }

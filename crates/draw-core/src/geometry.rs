@@ -87,6 +87,148 @@ pub fn generate_hachure_lines(
     lines
 }
 
+use crate::element::Element;
+
+/// Connection point on a shape where arrows can snap.
+#[derive(Debug, Clone)]
+pub struct ConnectionPoint {
+    pub x: f64,
+    pub y: f64,
+}
+
+/// Compute the 8 connection points for a shape element.
+/// Returns 4 edge midpoints + 4 corners (or shape-specific points).
+/// Returns empty vec for non-shape elements (Line, Arrow, FreeDraw, Text).
+pub fn connection_points(el: &Element) -> Vec<ConnectionPoint> {
+    match el {
+        Element::Rectangle(e) => {
+            let (x, y, w, h) = normalize_bounds(e.x, e.y, e.width, e.height);
+            rectangle_connection_points(x, y, w, h)
+        }
+        Element::Ellipse(e) => {
+            let (x, y, w, h) = normalize_bounds(e.x, e.y, e.width, e.height);
+            ellipse_connection_points(x, y, w, h)
+        }
+        Element::Diamond(e) => {
+            let (x, y, w, h) = normalize_bounds(e.x, e.y, e.width, e.height);
+            diamond_connection_points(x, y, w, h)
+        }
+        _ => Vec::new(),
+    }
+}
+
+fn rectangle_connection_points(x: f64, y: f64, w: f64, h: f64) -> Vec<ConnectionPoint> {
+    vec![
+        // Edge midpoints
+        ConnectionPoint { x: x + w / 2.0, y }, // top center
+        ConnectionPoint {
+            x: x + w,
+            y: y + h / 2.0,
+        }, // right center
+        ConnectionPoint {
+            x: x + w / 2.0,
+            y: y + h,
+        }, // bottom center
+        ConnectionPoint { x, y: y + h / 2.0 }, // left center
+        // Corners
+        ConnectionPoint { x, y },               // top-left
+        ConnectionPoint { x: x + w, y },        // top-right
+        ConnectionPoint { x: x + w, y: y + h }, // bottom-right
+        ConnectionPoint { x, y: y + h },        // bottom-left
+    ]
+}
+
+fn ellipse_connection_points(x: f64, y: f64, w: f64, h: f64) -> Vec<ConnectionPoint> {
+    let cx = x + w / 2.0;
+    let cy = y + h / 2.0;
+    let rx = w / 2.0;
+    let ry = h / 2.0;
+    let cos45 = std::f64::consts::FRAC_PI_4.cos();
+    let sin45 = std::f64::consts::FRAC_PI_4.sin();
+    vec![
+        // Cardinal points (edge midpoints of bounding box on ellipse perimeter)
+        ConnectionPoint { x: cx, y: cy - ry }, // top
+        ConnectionPoint { x: cx + rx, y: cy }, // right
+        ConnectionPoint { x: cx, y: cy + ry }, // bottom
+        ConnectionPoint { x: cx - rx, y: cy }, // left
+        // 45-degree points on ellipse perimeter
+        ConnectionPoint {
+            x: cx + rx * cos45,
+            y: cy - ry * sin45,
+        }, // top-right
+        ConnectionPoint {
+            x: cx + rx * cos45,
+            y: cy + ry * sin45,
+        }, // bottom-right
+        ConnectionPoint {
+            x: cx - rx * cos45,
+            y: cy + ry * sin45,
+        }, // bottom-left
+        ConnectionPoint {
+            x: cx - rx * cos45,
+            y: cy - ry * sin45,
+        }, // top-left
+    ]
+}
+
+fn diamond_connection_points(x: f64, y: f64, w: f64, h: f64) -> Vec<ConnectionPoint> {
+    let cx = x + w / 2.0;
+    let cy = y + h / 2.0;
+    vec![
+        // Vertices (the 4 tips of the diamond)
+        ConnectionPoint { x: cx, y },        // top vertex
+        ConnectionPoint { x: x + w, y: cy }, // right vertex
+        ConnectionPoint { x: cx, y: y + h }, // bottom vertex
+        ConnectionPoint { x, y: cy },        // left vertex
+        // Edge midpoints (between adjacent vertices)
+        ConnectionPoint {
+            x: cx + w / 4.0,
+            y: y + h / 4.0,
+        }, // top-right edge mid
+        ConnectionPoint {
+            x: cx + w / 4.0,
+            y: cy + h / 4.0,
+        }, // bottom-right edge mid
+        ConnectionPoint {
+            x: cx - w / 4.0,
+            y: cy + h / 4.0,
+        }, // bottom-left edge mid
+        ConnectionPoint {
+            x: cx - w / 4.0,
+            y: y + h / 4.0,
+        }, // top-left edge mid
+    ]
+}
+
+/// Find the nearest connection point within `threshold` world-coordinate distance.
+/// `wx, wy` are the world coordinates to snap to.
+/// `exclude_id` is the element to skip (the arrow being drawn).
+/// Returns `(element_id, snap_x, snap_y)` or None.
+pub fn find_nearest_snap_point(
+    elements: &[Element],
+    wx: f64,
+    wy: f64,
+    threshold: f64,
+    exclude_id: &str,
+) -> Option<(String, f64, f64)> {
+    let mut best: Option<(String, f64, f64, f64)> = None; // (id, x, y, dist)
+
+    for el in elements {
+        if el.id() == exclude_id {
+            continue;
+        }
+        let pts = connection_points(el);
+        for cp in &pts {
+            let dist = ((cp.x - wx).powi(2) + (cp.y - wy).powi(2)).sqrt();
+            if dist < threshold && (best.is_none() || dist < best.as_ref().unwrap().3) {
+                best = Some((el.id().to_string(), cp.x, cp.y, dist));
+            }
+        }
+    }
+
+    best.map(|(id, x, y, _)| (id, x, y))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -132,5 +274,87 @@ mod tests {
         let lines = generate_hachure_lines(50.0, 50.0, 10.0, 10.0, 1000.0, 0.0);
         // diag ~14.1, gap 1000 — only one or zero lines
         assert!(lines.len() <= 1);
+    }
+
+    #[test]
+    fn rectangle_connection_points_count() {
+        use crate::element::{Element, ShapeElement};
+        let el = Element::Rectangle(ShapeElement::new("r1".into(), 0.0, 0.0, 100.0, 50.0));
+        let pts = connection_points(&el);
+        assert_eq!(pts.len(), 8);
+        // Top center
+        assert!((pts[0].x - 50.0).abs() < 1e-10);
+        assert!((pts[0].y - 0.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn ellipse_connection_points_count() {
+        use crate::element::{Element, ShapeElement};
+        let el = Element::Ellipse(ShapeElement::new("e1".into(), 0.0, 0.0, 100.0, 60.0));
+        let pts = connection_points(&el);
+        assert_eq!(pts.len(), 8);
+        // Top point should be at center-x, top of ellipse
+        assert!((pts[0].x - 50.0).abs() < 1e-10);
+        assert!((pts[0].y - 0.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn diamond_connection_points_count() {
+        use crate::element::{Element, ShapeElement};
+        let el = Element::Diamond(ShapeElement::new("d1".into(), 0.0, 0.0, 100.0, 80.0));
+        let pts = connection_points(&el);
+        assert_eq!(pts.len(), 8);
+        // Top vertex
+        assert!((pts[0].x - 50.0).abs() < 1e-10);
+        assert!((pts[0].y - 0.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn find_snap_point_within_threshold() {
+        use crate::element::{Element, ShapeElement};
+        let elements = vec![Element::Rectangle(ShapeElement::new(
+            "r1".into(),
+            100.0,
+            100.0,
+            80.0,
+            60.0,
+        ))];
+        // Top-center of rectangle is at (140, 100)
+        let result = find_nearest_snap_point(&elements, 142.0, 102.0, 15.0, "");
+        assert!(result.is_some());
+        let (id, sx, sy) = result.unwrap();
+        assert_eq!(id, "r1");
+        assert!((sx - 140.0).abs() < 1e-10);
+        assert!((sy - 100.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn find_snap_point_outside_threshold() {
+        use crate::element::{Element, ShapeElement};
+        let elements = vec![Element::Rectangle(ShapeElement::new(
+            "r1".into(),
+            100.0,
+            100.0,
+            80.0,
+            60.0,
+        ))];
+        // Far from any connection point
+        let result = find_nearest_snap_point(&elements, 0.0, 0.0, 15.0, "");
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn find_snap_excludes_self() {
+        use crate::element::{Element, ShapeElement};
+        let elements = vec![Element::Rectangle(ShapeElement::new(
+            "r1".into(),
+            100.0,
+            100.0,
+            80.0,
+            60.0,
+        ))];
+        // Within threshold but excluded
+        let result = find_nearest_snap_point(&elements, 140.0, 100.0, 15.0, "r1");
+        assert!(result.is_none());
     }
 }

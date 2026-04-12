@@ -124,6 +124,13 @@ impl ShapeElement {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct Binding {
+    pub element_id: String,
+    pub focus: f64,
+    pub gap: f64,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct LineElement {
     pub id: String,
     pub x: f64,
@@ -141,6 +148,10 @@ pub struct LineElement {
     pub locked: bool,
     #[serde(default)]
     pub group_id: Option<String>,
+    #[serde(default)]
+    pub start_binding: Option<Binding>,
+    #[serde(default)]
+    pub end_binding: Option<Binding>,
 }
 
 impl LineElement {
@@ -156,6 +167,8 @@ impl LineElement {
             opacity: 1.0,
             locked: false,
             group_id: None,
+            start_binding: None,
+            end_binding: None,
         }
     }
 }

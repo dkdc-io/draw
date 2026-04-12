@@ -357,6 +357,30 @@ impl super::Renderer {
     }
 }
 
+impl super::Renderer {
+    /// Draw a snap indicator dot at the given world coordinates.
+    pub fn draw_snap_indicator(
+        &self,
+        pixmap: &mut Pixmap,
+        viewport: &crate::point::ViewState,
+        wx: f64,
+        wy: f64,
+    ) {
+        let vt = super::viewport_transform(viewport, self.config.pixel_ratio);
+        let scale = viewport.zoom as f32 * self.config.pixel_ratio;
+        let radius = super::HANDLE_RADIUS / scale;
+
+        let accent = Color::from_rgba8(super::ACCENT_R, super::ACCENT_G, super::ACCENT_B, 255);
+        let mut fill_paint = Paint::default();
+        fill_paint.set_color(accent);
+        fill_paint.anti_alias = true;
+
+        if let Some(path) = super::path::build_circle_path(wx as f32, wy as f32, radius) {
+            pixmap.fill_path(&path, &fill_paint, FillRule::Winding, vt, None);
+        }
+    }
+}
+
 fn draw_arrowhead_path(
     pixmap: &mut Pixmap,
     ah: &geometry::ArrowheadPoints,
