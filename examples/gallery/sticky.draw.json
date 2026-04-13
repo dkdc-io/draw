@@ -1,0 +1,234 @@
+{
+  "id": "gallery-sticky",
+  "version": 1,
+  "name": "sticky-notes",
+  "elements": [
+    {
+      "type": "Rectangle",
+      "id": "note1-bg",
+      "x": 20.0,
+      "y": 20.0,
+      "width": 160.0,
+      "height": 160.0,
+      "angle": -0.03,
+      "stroke": {
+        "color": "#78350f",
+        "width": 1.5,
+        "dash": []
+      },
+      "fill": {
+        "color": "#fef3c7",
+        "style": "solid",
+        "gap": 10.0,
+        "angle": 0.0
+      },
+      "opacity": 1.0,
+      "locked": false,
+      "group_id": null
+    },
+    {
+      "type": "Text",
+      "id": "note1-text",
+      "x": 32.0,
+      "y": 36.0,
+      "text": "shopping\n  bread\n  butter",
+      "font": {
+        "family": "Inter, sans-serif",
+        "size": 14.0,
+        "align": "left"
+      },
+      "stroke": {
+        "color": "#78350f",
+        "width": 1.0,
+        "dash": []
+      },
+      "opacity": 1.0,
+      "angle": 0.0,
+      "locked": false,
+      "group_id": null
+    },
+    {
+      "type": "Rectangle",
+      "id": "note2-bg",
+      "x": 200.0,
+      "y": 20.0,
+      "width": 160.0,
+      "height": 160.0,
+      "angle": 0.03,
+      "stroke": {
+        "color": "#1e3a8a",
+        "width": 1.5,
+        "dash": []
+      },
+      "fill": {
+        "color": "#dbeafe",
+        "style": "solid",
+        "gap": 10.0,
+        "angle": 0.0
+      },
+      "opacity": 1.0,
+      "locked": false,
+      "group_id": null
+    },
+    {
+      "type": "Text",
+      "id": "note2-text",
+      "x": 212.0,
+      "y": 36.0,
+      "text": "read list\n  Rust book\n  SICP",
+      "font": {
+        "family": "Inter, sans-serif",
+        "size": 14.0,
+        "align": "left"
+      },
+      "stroke": {
+        "color": "#1e3a8a",
+        "width": 1.0,
+        "dash": []
+      },
+      "opacity": 1.0,
+      "angle": 0.0,
+      "locked": false,
+      "group_id": null
+    },
+    {
+      "type": "Rectangle",
+      "id": "note3-bg",
+      "x": 380.0,
+      "y": 20.0,
+      "width": 160.0,
+      "height": 160.0,
+      "angle": -0.03,
+      "stroke": {
+        "color": "#831843",
+        "width": 1.5,
+        "dash": []
+      },
+      "fill": {
+        "color": "#fce7f3",
+        "style": "solid",
+        "gap": 10.0,
+        "angle": 0.0
+      },
+      "opacity": 1.0,
+      "locked": false,
+      "group_id": null
+    },
+    {
+      "type": "Text",
+      "id": "note3-text",
+      "x": 392.0,
+      "y": 36.0,
+      "text": "weekend\n  hike\n  cook",
+      "font": {
+        "family": "Inter, sans-serif",
+        "size": 14.0,
+        "align": "left"
+      },
+      "stroke": {
+        "color": "#831843",
+        "width": 1.0,
+        "dash": []
+      },
+      "opacity": 1.0,
+      "angle": 0.0,
+      "locked": false,
+      "group_id": null
+    },
+    {
+      "type": "Rectangle",
+      "id": "note4-bg",
+      "x": 110.0,
+      "y": 220.0,
+      "width": 160.0,
+      "height": 160.0,
+      "angle": 0.03,
+      "stroke": {
+        "color": "#064e3b",
+        "width": 1.5,
+        "dash": []
+      },
+      "fill": {
+        "color": "#d1fae5",
+        "style": "solid",
+        "gap": 10.0,
+        "angle": 0.0
+      },
+      "opacity": 1.0,
+      "locked": false,
+      "group_id": null
+    },
+    {
+      "type": "Text",
+      "id": "note4-text",
+      "x": 122.0,
+      "y": 236.0,
+      "text": "ideas\n  draw gallery\n  lint pass",
+      "font": {
+        "family": "Inter, sans-serif",
+        "size": 14.0,
+        "align": "left"
+      },
+      "stroke": {
+        "color": "#064e3b",
+        "width": 1.0,
+        "dash": []
+      },
+      "opacity": 1.0,
+      "angle": 0.0,
+      "locked": false,
+      "group_id": null
+    },
+    {
+      "type": "Rectangle",
+      "id": "note5-bg",
+      "x": 290.0,
+      "y": 220.0,
+      "width": 160.0,
+      "height": 160.0,
+      "angle": -0.03,
+      "stroke": {
+        "color": "#7f1d1d",
+        "width": 1.5,
+        "dash": []
+      },
+      "fill": {
+        "color": "#fee2e2",
+        "style": "solid",
+        "gap": 10.0,
+        "angle": 0.0
+      },
+      "opacity": 1.0,
+      "locked": false,
+      "group_id": null
+    },
+    {
+      "type": "Text",
+      "id": "note5-text",
+      "x": 302.0,
+      "y": 236.0,
+      "text": "blockers\n  pixmap panic\n  hachure opacity",
+      "font": {
+        "family": "Inter, sans-serif",
+        "size": 14.0,
+        "align": "left"
+      },
+      "stroke": {
+        "color": "#7f1d1d",
+        "width": 1.0,
+        "dash": []
+      },
+      "opacity": 1.0,
+      "angle": 0.0,
+      "locked": false,
+      "group_id": null
+    }
+  ],
+  "view": {
+    "scroll_x": 0.0,
+    "scroll_y": 0.0,
+    "zoom": 1.0
+  },
+  "created_at": "2026-01-01T00:00:00+00:00",
+  "modified_at": "2026-01-01T00:00:00+00:00"
+}

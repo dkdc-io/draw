@@ -1,0 +1,190 @@
+{
+  "id": "gallery-patterns",
+  "version": 1,
+  "name": "fill-patterns",
+  "elements": [
+    {
+      "type": "Rectangle",
+      "id": "solid-rect",
+      "x": 20.0,
+      "y": 40.0,
+      "width": 160.0,
+      "height": 120.0,
+      "angle": 0.0,
+      "stroke": {
+        "color": "#ec4899",
+        "width": 2.0,
+        "dash": []
+      },
+      "fill": {
+        "color": "#ec4899",
+        "style": "solid",
+        "gap": 8.0,
+        "angle": -0.785
+      },
+      "opacity": 1.0,
+      "locked": false,
+      "group_id": null
+    },
+    {
+      "type": "Text",
+      "id": "solid-label",
+      "x": 30.0,
+      "y": 180.0,
+      "text": "Solid",
+      "font": {
+        "family": "Inter, sans-serif",
+        "size": 14.0,
+        "align": "left"
+      },
+      "stroke": {
+        "color": "#1f2937",
+        "width": 1.0,
+        "dash": []
+      },
+      "opacity": 1.0,
+      "angle": 0.0,
+      "locked": false,
+      "group_id": null
+    },
+    {
+      "type": "Rectangle",
+      "id": "hachure-rect",
+      "x": 200.0,
+      "y": 40.0,
+      "width": 160.0,
+      "height": 120.0,
+      "angle": 0.0,
+      "stroke": {
+        "color": "#ec4899",
+        "width": 2.0,
+        "dash": []
+      },
+      "fill": {
+        "color": "#ec4899",
+        "style": "hachure",
+        "gap": 8.0,
+        "angle": -0.785
+      },
+      "opacity": 1.0,
+      "locked": false,
+      "group_id": null
+    },
+    {
+      "type": "Text",
+      "id": "hachure-label",
+      "x": 210.0,
+      "y": 180.0,
+      "text": "Hachure",
+      "font": {
+        "family": "Inter, sans-serif",
+        "size": 14.0,
+        "align": "left"
+      },
+      "stroke": {
+        "color": "#1f2937",
+        "width": 1.0,
+        "dash": []
+      },
+      "opacity": 1.0,
+      "angle": 0.0,
+      "locked": false,
+      "group_id": null
+    },
+    {
+      "type": "Rectangle",
+      "id": "crosshatch-rect",
+      "x": 380.0,
+      "y": 40.0,
+      "width": 160.0,
+      "height": 120.0,
+      "angle": 0.0,
+      "stroke": {
+        "color": "#ec4899",
+        "width": 2.0,
+        "dash": []
+      },
+      "fill": {
+        "color": "#ec4899",
+        "style": "crosshatch",
+        "gap": 8.0,
+        "angle": -0.785
+      },
+      "opacity": 1.0,
+      "locked": false,
+      "group_id": null
+    },
+    {
+      "type": "Text",
+      "id": "crosshatch-label",
+      "x": 390.0,
+      "y": 180.0,
+      "text": "CrossHatch",
+      "font": {
+        "family": "Inter, sans-serif",
+        "size": 14.0,
+        "align": "left"
+      },
+      "stroke": {
+        "color": "#1f2937",
+        "width": 1.0,
+        "dash": []
+      },
+      "opacity": 1.0,
+      "angle": 0.0,
+      "locked": false,
+      "group_id": null
+    },
+    {
+      "type": "Rectangle",
+      "id": "none-rect",
+      "x": 560.0,
+      "y": 40.0,
+      "width": 160.0,
+      "height": 120.0,
+      "angle": 0.0,
+      "stroke": {
+        "color": "#ec4899",
+        "width": 2.0,
+        "dash": []
+      },
+      "fill": {
+        "color": "#ec4899",
+        "style": "none",
+        "gap": 8.0,
+        "angle": -0.785
+      },
+      "opacity": 1.0,
+      "locked": false,
+      "group_id": null
+    },
+    {
+      "type": "Text",
+      "id": "none-label",
+      "x": 570.0,
+      "y": 180.0,
+      "text": "None",
+      "font": {
+        "family": "Inter, sans-serif",
+        "size": 14.0,
+        "align": "left"
+      },
+      "stroke": {
+        "color": "#1f2937",
+        "width": 1.0,
+        "dash": []
+      },
+      "opacity": 1.0,
+      "angle": 0.0,
+      "locked": false,
+      "group_id": null
+    }
+  ],
+  "view": {
+    "scroll_x": 0.0,
+    "scroll_y": 0.0,
+    "zoom": 1.0
+  },
+  "created_at": "2026-01-01T00:00:00+00:00",
+  "modified_at": "2026-01-01T00:00:00+00:00"
+}
