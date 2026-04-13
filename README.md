@@ -1,5 +1,11 @@
 # draw
 
+[![GitHub Release](https://img.shields.io/github/v/release/dkdc-io/draw?color=blue)](https://github.com/dkdc-io/draw/releases)
+[![PyPI](https://img.shields.io/pypi/v/dkdc-draw?color=blue)](https://pypi.org/project/dkdc-draw/)
+[![crates.io](https://img.shields.io/crates/v/dkdc-draw?color=blue)](https://crates.io/crates/dkdc-draw)
+[![CI](https://img.shields.io/github/actions/workflow/status/dkdc-io/draw/ci.yml?branch=main&label=CI)](https://github.com/dkdc-io/draw/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-8A2BE2.svg)](https://github.com/dkdc-io/draw/blob/main/LICENSE)
+
 Local-first, sketch-style drawing tool. Excalidraw-inspired, built on Rust with a vanilla JS frontend.
 
 Single binary. No cloud. Your drawings live in `~/.config/draw/drawings/`.
@@ -105,6 +111,10 @@ bin/check    # run all checks (format, lint, test)
 bin/format   # format all code
 bin/test     # run all tests
 ```
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). Issues and PRs welcome.
 
 ## License
 
