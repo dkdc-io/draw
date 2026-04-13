@@ -1,35 +1,35 @@
 //! Shared geometry helpers used by both the pixel renderer and SVG export.
 
 /// Arrowhead geometry constants.
-pub const ARROWHEAD_LENGTH: f64 = 14.0;
-pub const ARROWHEAD_ANGLE: f64 = 0.45;
+pub(crate) const ARROWHEAD_LENGTH: f64 = 14.0;
+pub(crate) const ARROWHEAD_ANGLE: f64 = 0.45;
 
 /// Hachure fill line width.
-pub const HACHURE_LINE_WIDTH: f64 = 1.5;
+pub(crate) const HACHURE_LINE_WIDTH: f64 = 1.5;
 
 /// Normalize a bounding box that may have negative width/height.
 /// Returns `(x, y, abs_width, abs_height)` with the top-left corner.
-pub fn normalize_bounds(x: f64, y: f64, w: f64, h: f64) -> (f64, f64, f64, f64) {
+pub(crate) fn normalize_bounds(x: f64, y: f64, w: f64, h: f64) -> (f64, f64, f64, f64) {
     let nx = if w < 0.0 { x + w } else { x };
     let ny = if h < 0.0 { y + h } else { y };
     (nx, ny, w.abs(), h.abs())
 }
 
 /// The three vertices of an arrowhead triangle.
-pub struct ArrowheadPoints {
-    pub tip_x: f64,
-    pub tip_y: f64,
-    pub left_x: f64,
-    pub left_y: f64,
-    pub right_x: f64,
-    pub right_y: f64,
+pub(crate) struct ArrowheadPoints {
+    pub(crate) tip_x: f64,
+    pub(crate) tip_y: f64,
+    pub(crate) left_x: f64,
+    pub(crate) left_y: f64,
+    pub(crate) right_x: f64,
+    pub(crate) right_y: f64,
 }
 
 /// Compute arrowhead triangle vertices.
 ///
 /// `tip` is the point of the arrow, `from` is the point it points away from.
 /// `length` and `spread` control the size and opening angle.
-pub fn compute_arrowhead(
+pub(crate) fn compute_arrowhead(
     tip_x: f64,
     tip_y: f64,
     from_x: f64,
@@ -49,11 +49,11 @@ pub fn compute_arrowhead(
 }
 
 /// A single hachure line segment.
-pub struct HachureLine {
-    pub x1: f64,
-    pub y1: f64,
-    pub x2: f64,
-    pub y2: f64,
+pub(crate) struct HachureLine {
+    pub(crate) x1: f64,
+    pub(crate) y1: f64,
+    pub(crate) x2: f64,
+    pub(crate) y2: f64,
 }
 
 /// Generate parallel hachure lines rotated around the center of a bounding box.
@@ -61,7 +61,7 @@ pub struct HachureLine {
 /// Lines span from `-diag` to `+diag` so they fully cover the shape before
 /// clipping. `gap` is the spacing between lines and `angle` is the rotation
 /// in radians.
-pub fn generate_hachure_lines(
+pub(crate) fn generate_hachure_lines(
     cx: f64,
     cy: f64,
     width: f64,

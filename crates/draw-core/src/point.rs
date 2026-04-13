@@ -48,7 +48,7 @@ impl Bounds {
             && self.y + self.height > other.y
     }
 
-    pub fn from_points(points: &[Point]) -> Option<Self> {
+    pub(crate) fn from_points(points: &[Point]) -> Option<Self> {
         if points.is_empty() {
             return None;
         }
