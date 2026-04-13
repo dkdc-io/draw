@@ -111,6 +111,14 @@ impl Renderer {
 
     // ── Main render entry point ─────────────────────────────────────
 
+    /// Render the document to a pixmap.
+    ///
+    /// # Panics
+    /// Panics if `tiny_skia::Pixmap::new` fails to allocate. Width and height
+    /// are clamped to at least 1 via `.max(1)`, so the remaining failure modes
+    /// are allocator OOM or dimensions whose `width * height * 4` overflows
+    /// `i32::MAX` — conditions the caller is responsible for avoiding via
+    /// [`RenderConfig`] sizing.
     pub fn render(
         &self,
         doc: &Document,

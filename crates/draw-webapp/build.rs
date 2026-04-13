@@ -44,9 +44,8 @@ fn main() {
         Ok(s) if s.success() => {}
         Ok(s) => {
             panic!(
-                "wasm-pack build failed with exit code: {}. \
-                 Make sure wasm-pack is installed: cargo install wasm-pack",
-                s
+                "wasm-pack build failed with exit code: {s}. \
+                 Make sure wasm-pack is installed: cargo install wasm-pack"
             );
         }
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {

@@ -96,7 +96,7 @@ impl DrawEngine {
 
     /// Render the current state and return RGBA pixel data.
     pub fn render(&self) -> Vec<u8> {
-        let sel_refs: Vec<&str> = self.selected_ids.iter().map(|s| s.as_str()).collect();
+        let sel_refs: Vec<&str> = self.selected_ids.iter().map(String::as_str).collect();
         let mut pixmap = self.renderer.render(
             &self.document,
             &self.viewport,
@@ -184,7 +184,7 @@ impl DrawEngine {
                     draw_core::HandlePosition::SouthWest => "SouthWest",
                     draw_core::HandlePosition::SouthEast => "SouthEast",
                 };
-                format!(r#"{{"id":"{}","handle":"{}"}}"#, id, handle_str)
+                format!(r#"{{"id":"{id}","handle":"{handle_str}"}}"#)
             }
             None => String::new(),
         }
@@ -214,7 +214,7 @@ impl DrawEngine {
     pub fn screen_to_world(&self, sx: f64, sy: f64) -> String {
         let wx = (sx - self.viewport.scroll_x) / self.viewport.zoom;
         let wy = (sy - self.viewport.scroll_y) / self.viewport.zoom;
-        format!(r#"{{"x":{},"y":{}}}"#, wx, wy)
+        format!(r#"{{"x":{wx},"y":{wy}}}"#)
     }
 
     pub fn scroll_x(&self) -> f64 {
@@ -366,22 +366,18 @@ impl DrawEngine {
     /// (stroke, fill, font, opacity, etc.) to merge into the element.
     pub fn update_element_style(&mut self, id: &str, style_json: &str) -> bool {
         // Snapshot "before" for undo
-        let before = self.document.get_element(id).cloned();
-        let before = match before {
-            Some(b) => b,
-            None => return false,
+        let Some(before) = self.document.get_element(id).cloned() else {
+            return false;
         };
 
         // Parse the style update as a generic JSON value
-        let updates: serde_json::Value = match serde_json::from_str(style_json) {
-            Ok(v) => v,
-            Err(_) => return false,
+        let Ok(updates) = serde_json::from_str::<serde_json::Value>(style_json) else {
+            return false;
         };
 
         // Serialize element, merge updates, deserialize back
-        let mut elem_val = match serde_json::to_value(&before) {
-            Ok(v) => v,
-            Err(_) => return false,
+        let Ok(mut elem_val) = serde_json::to_value(&before) else {
+            return false;
         };
 
         if let (Some(obj), Some(upd)) = (elem_val.as_object_mut(), updates.as_object()) {
@@ -512,7 +508,7 @@ impl DrawEngine {
 
     /// Get all element IDs as a JSON array.
     pub fn get_all_element_ids(&self) -> String {
-        let ids: Vec<&str> = self.document.elements.iter().map(|el| el.id()).collect();
+        let ids: Vec<&str> = self.document.elements.iter().map(Element::id).collect();
         serde_json::to_string(&ids).unwrap_or_else(|_| "[]".to_string())
     }
 
@@ -523,7 +519,7 @@ impl DrawEngine {
             .elements
             .iter()
             .filter(|el| el.group_id() == Some(group_id))
-            .map(|el| el.id())
+            .map(Element::id)
             .collect();
         serde_json::to_string(&ids).unwrap_or_else(|_| "[]".to_string())
     }
@@ -626,7 +622,7 @@ impl DrawEngine {
             exclude_id,
         ) {
             Some((element_id, x, y)) => {
-                format!(r#"{{"element_id":"{}","x":{},"y":{}}}"#, element_id, x, y)
+                format!(r#"{{"element_id":"{element_id}","x":{x},"y":{y}}}"#)
             }
             None => String::new(),
         }

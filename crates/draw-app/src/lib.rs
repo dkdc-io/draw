@@ -46,6 +46,19 @@ fn setup_macos_menu() {
 #[cfg(not(target_os = "macos"))]
 fn setup_macos_menu() {}
 
+/// Launch the desktop app wrapping the embedded webapp in a native webview.
+///
+/// If `open_id` is set, the window opens that drawing on launch.
+///
+/// # Errors
+/// Returns an error if the webview event loop or window cannot be created,
+/// the embedded webapp fails to report back a bound port, or the webview
+/// process terminates abnormally.
+///
+/// # Panics
+/// Panics if the background tokio runtime for the embedded webapp cannot be
+/// built or its listener cannot bind a port. These are treated as fatal
+/// because the desktop app has no UI to report them.
 pub fn run_app(open_id: Option<String>) -> anyhow::Result<()> {
     // Start the axum webapp on a random available port in a background thread
     let (port_tx, port_rx) = std::sync::mpsc::channel::<u16>();

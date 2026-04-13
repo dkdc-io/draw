@@ -103,6 +103,13 @@ fn static_response(
     (headers, content)
 }
 
+/// Run the axum webapp, serving the embedded frontend on [`PORT`].
+///
+/// If `open_id` is set, the browser opens that drawing on launch.
+///
+/// # Errors
+/// Returns an error if the tokio runtime cannot be built, the port is in use,
+/// or the server fails while running.
 pub fn run_webapp(open_id: Option<String>) -> anyhow::Result<()> {
     let rt = tokio::runtime::Runtime::new()?;
     rt.block_on(async {

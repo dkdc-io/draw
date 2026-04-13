@@ -271,9 +271,8 @@ impl super::Renderer {
         transform: &Transform,
         opacity: f32,
     ) {
-        let mut clip_mask = match Mask::new(pixmap.width(), pixmap.height()) {
-            Some(m) => m,
-            None => return,
+        let Some(mut clip_mask) = Mask::new(pixmap.width(), pixmap.height()) else {
+            return;
         };
         clip_mask.fill_path(clip_path, FillRule::Winding, true, *transform);
 

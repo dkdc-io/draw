@@ -220,7 +220,7 @@ pub fn find_nearest_snap_point(
         let pts = connection_points(el);
         for cp in &pts {
             let dist = ((cp.x - wx).powi(2) + (cp.y - wy).powi(2)).sqrt();
-            if dist < threshold && (best.is_none() || dist < best.as_ref().unwrap().3) {
+            if dist < threshold && best.as_ref().is_none_or(|b| dist < b.3) {
                 best = Some((el.id().to_string(), cp.x, cp.y, dist));
             }
         }

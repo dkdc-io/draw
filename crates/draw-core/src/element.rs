@@ -68,7 +68,7 @@ impl Element {
     }
 
     pub fn set_position(&mut self, x: f64, y: f64) {
-        with_element!(self, e => { e.x = x; e.y = y; })
+        with_element!(self, e => { e.x = x; e.y = y; });
     }
 
     pub fn opacity(&self) -> f64 {

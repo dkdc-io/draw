@@ -30,3 +30,6 @@ dkdc-draw-core = { version = "0.2.1", path = "../draw-core" }
 dkdc-draw-app = { version = "0.2.1", path = "../draw-app", optional = true }
 dkdc-draw-webapp = { version = "0.2.1", path = "../draw-webapp", optional = true }
 clap = { version = "4.5", features = ["derive"] }
+
+[lints]
+workspace = true

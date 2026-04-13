@@ -26,3 +26,6 @@ wasm-bindgen = "0.2"
 uuid = { version = "1", features = ["js"] }
 
 [dev-dependencies]
+
+[lints]
+workspace = true
