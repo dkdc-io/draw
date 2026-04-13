@@ -5,11 +5,21 @@ use crate::export_svg::export_svg;
 const DEFAULT_SCALE: f32 = 2.0;
 
 /// Export a document as PNG bytes at the default 2x scale.
+///
+/// See [`export_png_with_scale`] for error conditions.
+///
+/// # Errors
+/// Returns an error under the same conditions as [`export_png_with_scale`].
 pub fn export_png(doc: &Document) -> anyhow::Result<Vec<u8>> {
     export_png_with_scale(doc, DEFAULT_SCALE)
 }
 
 /// Export a document as PNG bytes at a given scale factor.
+///
+/// # Errors
+/// Returns an error if the intermediate SVG cannot be parsed, the scaled
+/// dimensions round to zero, allocating the pixmap fails, or PNG encoding
+/// fails.
 pub fn export_png_with_scale(doc: &Document, scale: f32) -> anyhow::Result<Vec<u8>> {
     let svg_string = export_svg(doc);
 

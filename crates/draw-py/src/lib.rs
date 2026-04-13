@@ -9,7 +9,7 @@ fn to_py_err(e: anyhow::Error) -> PyErr {
 
 #[pyfunction]
 fn run_cli(argv: Vec<String>) -> PyResult<()> {
-    draw::run_cli(argv.iter().map(|s| s.as_str())).map_err(to_py_err)
+    draw::run_cli(argv.iter().map(String::as_str)).map_err(to_py_err)
 }
 
 #[pyfunction]

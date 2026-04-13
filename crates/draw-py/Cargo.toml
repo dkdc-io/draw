@@ -20,3 +20,13 @@ dkdc-draw = { version = "0.2.1", path = "../draw-cli", features = ["webapp", "ap
 dkdc-draw-core = { version = "0.2.1", path = "../draw-core" }
 pyo3 = { version = "0.28", features = ["extension-module", "abi3-py311"] }
 serde_json = "1"
+
+# draw-py is its own cargo workspace so it can't `workspace = true` onto the
+# outer workspace lints — mirror the same surgical opt-ins here.
+[lints.clippy]
+manual_let_else = "warn"
+missing_errors_doc = "warn"
+missing_panics_doc = "warn"
+redundant_closure_for_method_calls = "warn"
+uninlined_format_args = "warn"
+semicolon_if_nothing_returned = "warn"

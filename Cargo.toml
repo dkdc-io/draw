@@ -18,3 +18,14 @@ exclude = ["crates/draw-py"]
 lto = true
 strip = true
 codegen-units = 1
+
+# Surgical clippy opt-ins. We don't enable clippy::pedantic wholesale — the
+# f32/f64 cast and must_use_candidate lints drown real signal. These are the
+# specific lints that caught bugs or unclear intent during review.
+[workspace.lints.clippy]
+manual_let_else = "warn"
+missing_errors_doc = "warn"
+missing_panics_doc = "warn"
+redundant_closure_for_method_calls = "warn"
+uninlined_format_args = "warn"
+semicolon_if_nothing_returned = "warn"

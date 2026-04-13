@@ -27,3 +27,6 @@ objc2-foundation = { version = "0.3", features = ["NSString"], default-features 
 objc2 = "0.6"
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "net"] }
 wry = "0.55"
+
+[lints]
+workspace = true

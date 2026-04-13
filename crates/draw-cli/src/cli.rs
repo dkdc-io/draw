@@ -59,6 +59,15 @@ pub enum Command {
     },
 }
 
+/// Parse `argv` as the draw CLI and dispatch the matching subcommand.
+///
+/// Clap handles `--help` / `--version` / argument errors itself by calling
+/// `process::exit`, so those paths never return here.
+///
+/// # Errors
+/// Returns an error if a subcommand fails: I/O errors loading or exporting a
+/// drawing, a requested drawing id not found, or the embedded webapp/app
+/// failing to launch.
 pub fn run_cli(argv: impl IntoIterator<Item = impl Into<String>>) -> Result<()> {
     let argv: Vec<String> = argv.into_iter().map(Into::into).collect();
 

@@ -5,6 +5,11 @@ use anyhow::{Context, Result};
 
 use crate::document::Document;
 
+/// Return the directory where drawings are stored, creating it if needed.
+///
+/// # Errors
+/// Returns an error if the platform config directory cannot be determined or
+/// the directory cannot be created.
 pub fn storage_dir() -> Result<PathBuf> {
     let dir = dirs::config_dir()
         .context("could not determine config directory")?
@@ -14,6 +19,10 @@ pub fn storage_dir() -> Result<PathBuf> {
     Ok(dir)
 }
 
+/// Serialize a document to `path` as pretty-printed JSON.
+///
+/// # Errors
+/// Returns an error if JSON serialization fails or the file cannot be written.
 pub fn save(doc: &Document, path: &Path) -> Result<()> {
     let json = serde_json::to_string_pretty(doc)?;
     if let Some(parent) = path.parent() {
@@ -23,6 +32,10 @@ pub fn save(doc: &Document, path: &Path) -> Result<()> {
     Ok(())
 }
 
+/// Save a document under [`storage_dir`] as `<doc.id>.draw.json`.
+///
+/// # Errors
+/// Returns an error if the storage directory cannot be resolved or writing fails.
 pub fn save_to_storage(doc: &Document) -> Result<PathBuf> {
     let dir = storage_dir()?;
     let path = dir.join(format!("{}.draw.json", doc.id));
@@ -30,12 +43,20 @@ pub fn save_to_storage(doc: &Document) -> Result<PathBuf> {
     Ok(path)
 }
 
+/// Load a document from a `.draw.json` file.
+///
+/// # Errors
+/// Returns an error if the file cannot be read or the JSON is malformed.
 pub fn load(path: &Path) -> Result<Document> {
     let json = fs::read_to_string(path).context("could not read drawing file")?;
     let doc: Document = serde_json::from_str(&json).context("invalid drawing file")?;
     Ok(doc)
 }
 
+/// List all drawings in [`storage_dir`] as `(name, path)` tuples, sorted by name.
+///
+/// # Errors
+/// Returns an error if the storage directory cannot be resolved or read.
 pub fn list_drawings() -> Result<Vec<(String, PathBuf)>> {
     let dir = storage_dir()?;
     let mut drawings = vec![];

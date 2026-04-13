@@ -22,29 +22,27 @@ pub fn export_svg(doc: &Document) -> String {
     let w = bounds.width + padding * 2.0;
     let h = bounds.height + padding * 2.0;
 
-    let mut svg = format!(
-        r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="{x} {y} {w} {h}" width="{w}" height="{h}">"#
-    );
-    svg.push('\n');
-
-    // Collect defs (clipPaths for hachure fills)
     let mut defs = String::new();
+    let mut body = String::new();
     let mut clip_id: usize = 0;
 
     for element in &doc.elements {
         let (element_svg, element_defs) = render_element(element, &mut clip_id);
         defs.push_str(&element_defs);
-        svg.push_str(&element_svg);
-        svg.push('\n');
+        body.push_str(&element_svg);
+        body.push('\n');
     }
 
-    // Insert defs block before elements if needed
+    let mut svg = format!(
+        r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="{x} {y} {w} {h}" width="{w}" height="{h}">"#
+    );
+    svg.push('\n');
     if !defs.is_empty() {
-        let defs_block = format!("  <defs>\n{defs}  </defs>\n");
-        let insert_pos = svg.find('\n').unwrap() + 1;
-        svg.insert_str(insert_pos, &defs_block);
+        svg.push_str("  <defs>\n");
+        svg.push_str(&defs);
+        svg.push_str("  </defs>\n");
     }
-
+    svg.push_str(&body);
     svg.push_str("</svg>");
     svg
 }
@@ -353,9 +351,8 @@ fn render_hachure_group(clip_id: &str, bounds: &Bounds, fill: &FillStyle, opacit
     }
 
     format!(
-        r#"  <g clip-path="url(#{clip_id})" opacity="{}" style="opacity:{HACHURE_OPACITY}">
-{lines}  </g>"#,
-        opacity
+        r#"  <g clip-path="url(#{clip_id})" opacity="{opacity}" style="opacity:{HACHURE_OPACITY}">
+{lines}  </g>"#
     )
 }
 
@@ -371,7 +368,7 @@ fn fill_attr(color: &str, style: &FillType) -> String {
 fn stroke_attrs(color: &str, width: f64, dash: &[f64]) -> String {
     let mut s = format!(r#"stroke="{color}" stroke-width="{width}""#);
     if !dash.is_empty() {
-        let dash_str: Vec<String> = dash.iter().map(|d| d.to_string()).collect();
+        let dash_str: Vec<String> = dash.iter().map(f64::to_string).collect();
         s.push_str(&format!(r#" stroke-dasharray="{}""#, dash_str.join(",")));
     }
     s
