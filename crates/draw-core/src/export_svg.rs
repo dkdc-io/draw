@@ -350,6 +350,10 @@ fn render_hachure_group(clip_id: &str, bounds: &Bounds, fill: &FillStyle, opacit
         ));
     }
 
+    // TODO: opacity="…" and style="opacity:…" both set opacity on the same
+    // <g>; the inline `style` wins in the CSS cascade and the attribute is
+    // effectively dead. Kept as-is to preserve output byte-equivalence with
+    // prior behavior; address in a follow-up.
     format!(
         r#"  <g clip-path="url(#{clip_id})" opacity="{opacity}" style="opacity:{HACHURE_OPACITY}">
 {lines}  </g>"#
