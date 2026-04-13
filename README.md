@@ -79,6 +79,14 @@ uv run python examples/hello.py               # Python: same, plus hello.draw.js
 
 Both build a small document programmatically and export it. Source: `crates/draw-core/examples/hello.rs`, `examples/hello.py`.
 
+### Sample gallery
+
+[examples/gallery/](examples/gallery/) contains five canonical drawings — flowchart, sticky-notes, wireframe, sketch, patterns — each committed as `.draw.json` + `.svg` + `.png`. All five are produced by a single Rust example that exercises the full API surface (every element type, every fill pattern, stroke/dash styles, freedraw curves, arrows with heads):
+
+```bash
+cargo run --example gallery -p dkdc-draw-core
+```
+
 ### Keyboard shortcuts
 
 | Key | Action |

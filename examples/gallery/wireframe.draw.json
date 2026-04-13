@@ -1,0 +1,318 @@
+{
+  "id": "gallery-wireframe",
+  "version": 1,
+  "name": "wireframe",
+  "elements": [
+    {
+      "type": "Rectangle",
+      "id": "frame",
+      "x": 20.0,
+      "y": 20.0,
+      "width": 440.0,
+      "height": 320.0,
+      "angle": 0.0,
+      "stroke": {
+        "color": "#334155",
+        "width": 2.5,
+        "dash": []
+      },
+      "fill": {
+        "color": "#334155",
+        "style": "none",
+        "gap": 10.0,
+        "angle": 0.0
+      },
+      "opacity": 1.0,
+      "locked": false,
+      "group_id": null
+    },
+    {
+      "type": "Rectangle",
+      "id": "titlebar",
+      "x": 20.0,
+      "y": 20.0,
+      "width": 440.0,
+      "height": 40.0,
+      "angle": 0.0,
+      "stroke": {
+        "color": "#334155",
+        "width": 1.5,
+        "dash": []
+      },
+      "fill": {
+        "color": "#334155",
+        "style": "none",
+        "gap": 10.0,
+        "angle": 0.0
+      },
+      "opacity": 1.0,
+      "locked": false,
+      "group_id": null
+    },
+    {
+      "type": "Text",
+      "id": "title",
+      "x": 34.0,
+      "y": 34.0,
+      "text": "~/draw",
+      "font": {
+        "family": "Inter, sans-serif",
+        "size": 14.0,
+        "align": "left"
+      },
+      "stroke": {
+        "color": "#334155",
+        "width": 1.0,
+        "dash": []
+      },
+      "opacity": 1.0,
+      "angle": 0.0,
+      "locked": false,
+      "group_id": null
+    },
+    {
+      "type": "Rectangle",
+      "id": "content",
+      "x": 40.0,
+      "y": 80.0,
+      "width": 400.0,
+      "height": 240.0,
+      "angle": 0.0,
+      "stroke": {
+        "color": "#64748b",
+        "width": 1.0,
+        "dash": [
+          6.0,
+          4.0
+        ]
+      },
+      "fill": {
+        "color": "#64748b",
+        "style": "none",
+        "gap": 10.0,
+        "angle": 0.0
+      },
+      "opacity": 1.0,
+      "locked": false,
+      "group_id": null
+    },
+    {
+      "type": "Ellipse",
+      "id": "btn1",
+      "x": 60.0,
+      "y": 100.0,
+      "width": 80.0,
+      "height": 32.0,
+      "angle": 0.0,
+      "stroke": {
+        "color": "#0ea5e9",
+        "width": 1.5,
+        "dash": []
+      },
+      "fill": {
+        "color": "#0ea5e9",
+        "style": "none",
+        "gap": 10.0,
+        "angle": 0.0
+      },
+      "opacity": 1.0,
+      "locked": false,
+      "group_id": null
+    },
+    {
+      "type": "Text",
+      "id": "btn1-label",
+      "x": 80.0,
+      "y": 110.0,
+      "text": "open",
+      "font": {
+        "family": "Inter, sans-serif",
+        "size": 12.0,
+        "align": "left"
+      },
+      "stroke": {
+        "color": "#0c4a6e",
+        "width": 1.0,
+        "dash": []
+      },
+      "opacity": 1.0,
+      "angle": 0.0,
+      "locked": false,
+      "group_id": null
+    },
+    {
+      "type": "Ellipse",
+      "id": "btn2",
+      "x": 160.0,
+      "y": 100.0,
+      "width": 80.0,
+      "height": 32.0,
+      "angle": 0.0,
+      "stroke": {
+        "color": "#0ea5e9",
+        "width": 1.5,
+        "dash": []
+      },
+      "fill": {
+        "color": "#0ea5e9",
+        "style": "none",
+        "gap": 10.0,
+        "angle": 0.0
+      },
+      "opacity": 1.0,
+      "locked": false,
+      "group_id": null
+    },
+    {
+      "type": "Text",
+      "id": "btn2-label",
+      "x": 180.0,
+      "y": 110.0,
+      "text": "save",
+      "font": {
+        "family": "Inter, sans-serif",
+        "size": 12.0,
+        "align": "left"
+      },
+      "stroke": {
+        "color": "#0c4a6e",
+        "width": 1.0,
+        "dash": []
+      },
+      "opacity": 1.0,
+      "angle": 0.0,
+      "locked": false,
+      "group_id": null
+    },
+    {
+      "type": "Ellipse",
+      "id": "btn3",
+      "x": 260.0,
+      "y": 100.0,
+      "width": 80.0,
+      "height": 32.0,
+      "angle": 0.0,
+      "stroke": {
+        "color": "#0ea5e9",
+        "width": 1.5,
+        "dash": []
+      },
+      "fill": {
+        "color": "#0ea5e9",
+        "style": "none",
+        "gap": 10.0,
+        "angle": 0.0
+      },
+      "opacity": 1.0,
+      "locked": false,
+      "group_id": null
+    },
+    {
+      "type": "Text",
+      "id": "btn3-label",
+      "x": 280.0,
+      "y": 110.0,
+      "text": "export",
+      "font": {
+        "family": "Inter, sans-serif",
+        "size": 12.0,
+        "align": "left"
+      },
+      "stroke": {
+        "color": "#0c4a6e",
+        "width": 1.0,
+        "dash": []
+      },
+      "opacity": 1.0,
+      "angle": 0.0,
+      "locked": false,
+      "group_id": null
+    },
+    {
+      "type": "Rectangle",
+      "id": "canvas",
+      "x": 60.0,
+      "y": 160.0,
+      "width": 380.0,
+      "height": 140.0,
+      "angle": 0.0,
+      "stroke": {
+        "color": "#94a3b8",
+        "width": 1.0,
+        "dash": []
+      },
+      "fill": {
+        "color": "#94a3b8",
+        "style": "none",
+        "gap": 10.0,
+        "angle": 0.0
+      },
+      "opacity": 1.0,
+      "locked": false,
+      "group_id": null
+    },
+    {
+      "type": "Line",
+      "id": "d1",
+      "x": 60.0,
+      "y": 160.0,
+      "points": [
+        {
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "x": 380.0,
+          "y": 140.0
+        }
+      ],
+      "stroke": {
+        "color": "#a855f7",
+        "width": 2.0,
+        "dash": []
+      },
+      "start_arrowhead": null,
+      "end_arrowhead": null,
+      "opacity": 1.0,
+      "locked": false,
+      "group_id": null,
+      "start_binding": null,
+      "end_binding": null
+    },
+    {
+      "type": "Line",
+      "id": "d2",
+      "x": 440.0,
+      "y": 160.0,
+      "points": [
+        {
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "x": -380.0,
+          "y": 140.0
+        }
+      ],
+      "stroke": {
+        "color": "#a855f7",
+        "width": 2.0,
+        "dash": []
+      },
+      "start_arrowhead": null,
+      "end_arrowhead": null,
+      "opacity": 1.0,
+      "locked": false,
+      "group_id": null,
+      "start_binding": null,
+      "end_binding": null
+    }
+  ],
+  "view": {
+    "scroll_x": 0.0,
+    "scroll_y": 0.0,
+    "zoom": 1.0
+  },
+  "created_at": "2026-01-01T00:00:00+00:00",
+  "modified_at": "2026-01-01T00:00:00+00:00"
+}
