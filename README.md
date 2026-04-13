@@ -116,6 +116,10 @@ bin/test     # run all tests
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). Issues and PRs welcome.
 
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md).
+
 ## License
 
 MIT
