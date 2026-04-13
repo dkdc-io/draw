@@ -6,14 +6,36 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-04-13
+
+**Breaking**: the `dkdc-draw-core` public API surface is tightened. Unused `pub` items in the `geometry` module and `Bounds::from_points` are now `pub(crate)`. See migration notes at the end of this entry.
+
 ### Added
+- Sample gallery: 5 canonical drawings exercising every element type and fill pattern, committed as `.draw.json` + `.svg` + `.png` under `examples/gallery/` ([#41](https://github.com/dkdc-io/draw/pull/41))
+- Python test coverage grown from 5 to 27 tests across `tests/test_core.py` and `tests/test_gallery_roundtrip.py` ([#43](https://github.com/dkdc-io/draw/pull/43))
 - Runnable hello-world examples in Rust and Python ([#38](https://github.com/dkdc-io/draw/pull/38))
 - Integration tests for draw-core public API and arrow Binding round-trip ([#37](https://github.com/dkdc-io/draw/pull/37))
 - CONTRIBUTING.md and README badges (Release, PyPI, crates.io, CI, License) ([#36](https://github.com/dkdc-io/draw/pull/36))
 - Arrow snap-to-shape connection points (start_binding / end_binding) ([#35](https://github.com/dkdc-io/draw/pull/35))
+- CHANGELOG.md following Keep a Changelog ([#39](https://github.com/dkdc-io/draw/pull/39))
 
 ### Changed
+- **Breaking**: demoted unused items in `dkdc-draw-core` from `pub` to `pub(crate)` ([#42](https://github.com/dkdc-io/draw/pull/42)):
+  - `geometry::ARROWHEAD_LENGTH`, `ARROWHEAD_ANGLE`, `HACHURE_LINE_WIDTH`
+  - `geometry::normalize_bounds`, `compute_arrowhead`, `generate_hachure_lines`
+  - `geometry::ArrowheadPoints`, `HachureLine` (structs + fields)
+  - `point::Bounds::from_points`
+- Adopted surgical clippy pedantic opt-ins workspace-wide; no behavior change ([#40](https://github.com/dkdc-io/draw/pull/40))
 - Codebase simplification pass + UX improvements ([#34](https://github.com/dkdc-io/draw/pull/34))
+
+### Migration notes for 0.2.1 → 0.3.0
+
+`Point::distance_to` and `Bounds::intersects` remain `pub` and are the recommended geometry primitives for external callers. If you were reaching into the demoted helpers directly, the intended replacements are:
+
+- `geometry::normalize_bounds` → inline: `let (x, y, w, h) = (min(x1, x2), min(y1, y2), (x1 - x2).abs(), (y1 - y2).abs())`
+- `geometry::compute_arrowhead` / `ArrowheadPoints` → no public alternative yet; open an issue if you need this — happy to carve out a stable shape for it.
+- `geometry::generate_hachure_lines` / `HachureLine` → no public alternative yet; same as above.
+- `Bounds::from_points` → construct via `Bounds::new(x, y, w, h)` from your own min/max reduction.
 
 ## [0.2.1] - 2026-04-07
 
@@ -75,7 +97,8 @@ Initial release. Core drawing tool with CLI, webapp, and desktop app.
 - Skipped maturin build in CI ([#12](https://github.com/dkdc-io/draw/pull/12))
 - Missing `chrono` dependency on WASM crate ([#9](https://github.com/dkdc-io/draw/pull/9))
 
-[Unreleased]: https://github.com/dkdc-io/draw/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/dkdc-io/draw/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/dkdc-io/draw/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/dkdc-io/draw/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/dkdc-io/draw/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/dkdc-io/draw/compare/v0.1.0...v0.1.1
