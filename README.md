@@ -68,6 +68,17 @@ dkdc_draw.save_document(doc, "sketch.draw.json")
 svg = dkdc_draw.export_svg(doc)
 ```
 
+### Examples
+
+Runnable hello-world in both languages:
+
+```bash
+cargo run --example hello -p dkdc-draw-core   # Rust: writes hello.svg + hello.png
+uv run python examples/hello.py               # Python: same, plus hello.draw.json
+```
+
+Both build a small document programmatically and export it. Source: `crates/draw-core/examples/hello.rs`, `examples/hello.py`.
+
 ### Keyboard shortcuts
 
 | Key | Action |
